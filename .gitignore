@@ -1,0 +1,10 @@
+# Ignore Visual Studio files
+.vs/
+*.sqlite
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore logs
+*.log

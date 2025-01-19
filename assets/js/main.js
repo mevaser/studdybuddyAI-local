@@ -406,3 +406,102 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+
+
+/* login handler*/
+
+import { Amplify } from 'aws-amplify';
+
+Amplify.configure({
+    Auth: {
+        region: 'us-east-1', // AWS region
+        userPoolId: 'us-east-1yfkzkrdrk', // Replace with the User Pool ID (inferred from domain)
+        userPoolWebClientId: '6q9dfaem3aaobkec9fs0p2n07e', // Your App Client ID
+        oauth: {
+            domain: 'us-east-1yfkzkrdrk.auth.us-east-1.amazoncognito.com', // Cognito domain
+            scope: ['email', 'openid', 'profile'], // Scopes for authentication
+            redirectSignIn: 'http://studybuddy-website.s3-website-us-east-1.amazonaws.com', // Redirect after login
+            redirectSignOut: 'http://studybuddy-website.s3-website-us-east-1.amazonaws.com', // Redirect after logout
+            responseType: 'code', // Authorization code grant
+        },
+    },
+});
+
+
+/* login handler*/
+function getAuthorizationCode() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('code'); // This retrieves the 'code' parameter from the URL
+}
+
+// Check if there's an authorization code in the URL
+const authCode = getAuthorizationCode();
+if (authCode) {
+    console.log("Authorization Code:", authCode);
+    // Proceed to exchange the code for tokens
+}
+
+async function exchangeCodeForToken(authCode) {
+    const clientId = '6q9dfaem3aaobkec9fs0p2n07e';
+    const domain = 'us-east-1yfkzkrdrk.auth.us-east-1.amazoncognito.com';
+    const redirectUri = 'http://studybuddy-website.s3-website-us-east-1.amazonaws.com';
+
+    try {
+        const response = await fetch(`https://${domain}/oauth2/token`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                grant_type: 'authorization_code',
+                client_id: clientId,
+                code: authCode,
+                redirect_uri: redirectUri,
+            }),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            localStorage.setItem('accessToken', data.access_token);
+            localStorage.setItem('idToken', data.id_token);
+            return data;
+        } else {
+            console.error('Error exchanging code for token:', data);
+            alert('Failed to log in. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred during login.');
+    }
+}
+
+async function fetchUserDetails() {
+    const idToken = localStorage.getItem('idToken');
+    if (!idToken) {
+        console.error('ID token not found.');
+        return;
+    }
+
+    const decodedToken = JSON.parse(atob(idToken.split('.')[1])); // Decode the JWT token
+    return decodedToken; // Contains user attributes like email, name, etc.
+}
+document.addEventListener('DOMContentLoaded', async () => {
+    const authCode = getAuthorizationCode();
+
+    if (authCode) {
+        await exchangeCodeForToken(authCode);
+        window.history.replaceState({}, document.title, '/'); // Remove code from URL
+    }
+
+    const userDetails = await fetchUserDetails();
+    if (userDetails) {
+        document.querySelectorAll('.user-name').forEach((el) => {
+            el.textContent = userDetails.name || 'Guest';
+        });
+
+        document.querySelectorAll('.user-email').forEach((el) => {
+            el.textContent = userDetails.email || 'No email';
+        });
+    }
+});
