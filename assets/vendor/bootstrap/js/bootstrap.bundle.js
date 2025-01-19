@@ -2889,7 +2889,7 @@
     };
   }
 
-  function isAnySideFullyClipped(overflow) {
+  function isAnySillyClipped(overflow) {
     return [top, right, bottom, left].some(function (side) {
       return overflow[side] >= 0;
     });

@@ -29284,7 +29284,8 @@
        *     For example, `visualMap[i].dimension: "1"` is the same meaning as `visualMap[i].dimension: 1`,
        *     if no dimension name is defined as `"1"`.
        * + If dim is a not-number-like string, it means the concrete dim name.
-       *   For example, it can be be default name `"x"`, `"y"`, `"z"`, `"lng"`, `"lat"`, `"angle"`, `"radius"`,
+       *   For example, it can be be 
+       *  `"x"`, `"y"`, `"z"`, `"lng"`, `"lat"`, `"angle"`, `"radius"`,
        *   or customized in `dimensions` property of option like `"age"`.
        *
        * @return recognized `DimensionIndex`. Otherwise return null/undefined (means that dim is `DimensionName`).

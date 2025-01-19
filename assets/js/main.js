@@ -360,58 +360,70 @@
 
 
 
-/* Chat handling */
+/* Chat Handling */
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Script loaded and DOM ready"); // Debugging line
     const chatWindow = document.getElementById('chat-window');
     const chatInput = document.getElementById('chat-input');
     const sendButton = document.getElementById('send-btn');
 
+    // Check if necessary elements are present
     if (!chatWindow || !chatInput || !sendButton) {
-        console.error("One or more elements are missing!");
+        console.error("One or more required elements are missing!");
         return;
     }
 
-    console.log(chatWindow, chatInput, sendButton); // Debugging line
+    /**
+     * Escape HTML to prevent XSS attacks.
+     * @param {string} str - Input string to escape.
+     * @returns {string} Escaped HTML string.
+     */
+    function escapeHTML(str) {
+        const div = document.createElement('div');
+        div.innerText = str;
+        return div.innerHTML;
+    }
 
-    // Function to add a message to the chat window
+    /**
+     * Add a message to the chat window.
+     * @param {string} content - The message content.
+     * @param {string} sender - The sender of the message ('user' or 'api').
+     */
     function addMessage(content, sender = 'user') {
         const message = document.createElement('div');
         message.className = `message ${sender}`;
-        message.innerHTML = content.replace(/\n/g, '<br>'); // Preserve line breaks
+        message.innerHTML = escapeHTML(content).replace(/\n/g, '<br>'); // Preserve line breaks
         chatWindow.appendChild(message);
-        chatWindow.scrollTop = chatWindow.scrollHeight;
+        chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to the bottom
     }
 
-    // Event listener for "Send" button
+    // Event listener for the "Send" button
     sendButton.addEventListener('click', () => {
         const message = chatInput.value.trim();
         if (!message) return;
 
         // Add the user's message to the chat
         addMessage(message, 'user');
-        chatInput.value = '';
+        chatInput.value = ''; // Clear input field
+        chatInput.focus(); // Refocus the input field
 
-        // Simulate API response
+        // Simulate an API response
         setTimeout(() => {
             addMessage("This is a response from GPT!", 'api');
         }, 1000);
     });
 
-    // Handle "Enter" and "Shift + Enter"
+    // Handle "Enter" key press
     chatInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault();
-            sendButton.click();
+            event.preventDefault(); // Prevent new line
+            sendButton.click(); // Trigger the send button
         }
     });
 });
 
-
-
 /* login handler*/
 
-import { Amplify } from 'aws-amplify';
+const Amplify = window.Amplify;
 
 Amplify.configure({
     Auth: {
