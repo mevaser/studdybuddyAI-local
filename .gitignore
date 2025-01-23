@@ -1,10 +1,38 @@
-# Ignore Visual Studio files
-.vs/
-*.sqlite
+# Node.js modules and logs
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Ignore system files
+# macOS
 .DS_Store
-Thumbs.db
 
-# Ignore logs
+# Windows
+Thumbs.db
+desktop.ini
+
+# Sensitive files
+.env
+.aws/
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.code-workspace
+*.iml
+
+# Logs and temp files
+logs/
 *.log
+*.tmp
+
+# Compiled or minified files
+*.min.css
+*.min.js
+
+# Ignore uploaded files in S3 structure
+assets/uploads/
+
+# Build artifacts (if applicable)
+dist/
+build/
