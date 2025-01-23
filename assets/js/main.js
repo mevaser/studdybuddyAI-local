@@ -433,6 +433,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
 
+            console.log(JSON.stringify({
+                email: userEmail, // Use the email from the token
+                question: message
+            }));
+
             if (!response.ok) {
                 throw new Error('Failed to get a response from the server');
             }
@@ -618,19 +623,15 @@ async function fetchStudentProfile() {
     console.log('Email being sent:', email); // Log the email
 
     try {
+        // Construct the API URL with the query string parameter
+        const apiUrl = `https://dqf0c1okf1.execute-api.us-east-1.amazonaws.com/getstudentProfile/updateProfile?Email=${encodeURIComponent(email)}`;
+
         // Call the API Gateway to fetch the student profile
-        const response = await fetch('https://dqf0c1okf1.execute-api.us-east-1.amazonaws.com/getstudentProfile/updateProfile', {
-            method: 'POST',
+        const response = await fetch(apiUrl, {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ Email: email }), // Ensure this matches the API's expected format
-        });
-
-        console.log('API Request:', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ Email: email }),
         });
 
         if (response.ok) {
@@ -667,6 +668,20 @@ function updateProfileUI(profile) {
     document.querySelectorAll('.user-name').forEach((el) => {
         el.textContent = profile.Name || 'Guest';
     });
+        
+    document.querySelectorAll('.user-phone').forEach((el) => {
+        el.textContent = profile.phone || 'Guest';
+    });
+
+    document.querySelectorAll('.user-email').forEach((el) => {
+        el.textContent = profile.Email || 'Guest';
+    });
+
+    document.querySelectorAll('.user-bio').forEach((el) => {
+        el.textContent = profile.Bio || 'Guest';
+    });
+
+
 }
 
 
