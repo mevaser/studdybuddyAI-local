@@ -1125,8 +1125,7 @@ button {
   margin-bottom: 0;
 }
 
-.contact .php-email-form .
--message {
+.contact .php-email-form .error-message {
   display: none;
   color: #fff;
   background: #ed3c0d;
