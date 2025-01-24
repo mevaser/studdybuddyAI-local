@@ -155,6 +155,9 @@
                     <th>#</th>
                     <th>Name</th>
                     <th>Email</th>
+                    <th>Phone</th>
+                    <th>Bio</th>
+                    <th>LinkedIn</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -176,8 +179,59 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <!-- Main JS File -->
-  <script src="https://studybuddy-website.s3.us-east-1.amazonaws.com/studybuddy/assets/js/main.js"></script>
+  <script>
+    async function fetchStudents() {
+      const apiUrl = "https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/getAllStudents";
+
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
+        const responseBody = await response.json();
+
+        let students = responseBody.body;
+        if (typeof students === "string") {
+          students = JSON.parse(students);
+        }
+
+        if (!Array.isArray(students)) {
+          throw new Error("API response is not an array");
+        }
+
+        const tableBody = document.querySelector("#students-table tbody");
+        tableBody.innerHTML = "";
+
+        students.forEach((student, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${student.Name || "N/A"}</td>
+            <td>${student.Email || "N/A"}</td>
+            <td>${student.phone || "N/A"}</td>
+            <td>${student.Bio || "N/A"}</td>
+            <td><a href="${student["linkedin profile"] || "#"}" target="_blank">LinkedIn</a></td>
+            <td>
+              <button class="btn btn-primary btn-sm" onclick="viewStudentDetails('${student.Email}')">View</button>
+            </td>
+          `;
+          tableBody.appendChild(row);
+        });
+
+        document.getElementById("total-students").innerText = students.length;
+
+      } catch (error) {
+        console.error("Error fetching students:", error);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", fetchStudents);
+
+    function viewStudentDetails(email) {
+      alert(`Details for student with email: ${email}`);
+    }
+  </script>
 </body>
 
 </html>
-
