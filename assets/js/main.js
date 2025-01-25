@@ -385,82 +385,14 @@ document.addEventListener('DOMContentLoaded', () => {
         chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to the bottom
     }
 
-    // Event listener for the "Save Changes" button - UpdateBio
+ // Event listener for the "Save Changes" button - UpdateBio
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const saveChangesBtn = document.getElementById('saveChangesBtn');
-    
-        if (saveChangesBtn) {
-            saveChangesBtn.addEventListener('click', async (event) => {
-                event.preventDefault();
-                console.log("✅ Save Changes button clicked");
-    
-                // Extract updated values from form fields
-                const updatedName = document.getElementById('fullName')?.value.trim();
-                const updatedBio = document.getElementById('about')?.value.trim();
-                const updatedPhone = document.getElementById('Phone')?.value.trim();
-                const updatedEmail = document.getElementById('Email')?.value.trim();
-                const updatedLinkedin = document.getElementById('Linkedin')?.value.trim();
-    
-                // Ensure required fields are provided
-                if (!updatedEmail) {
-                    alert("Email is required.");
-                    return;
-                }
-    
-                // Retrieve the ID token from localStorage
-                const idToken = localStorage.getItem('idToken');
-                if (!idToken) {
-                    alert("User is not authenticated.");
-                    return;
-                }
-    
-                console.log("🔑 ID Token found, extracting user email...");
-                const base64Url = idToken.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const decodedToken = JSON.parse(decodeURIComponent(
-                    atob(base64)
-                        .split('')
-                        .map((c) => `%${('00' + c.charCodeAt(0).toString(16)).slice(-2)}`)
-                        .join('')
-                ));
-    
-                const userEmail = decodedToken.email || updatedEmail;
-                console.log("📧 User Email:", userEmail);
-    
-                try {
-                    // Construct API URL with query parameters
-                    const apiUrl = `https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/updateProfile?Email=${encodeURIComponent(userEmail)}&Name=${encodeURIComponent(updatedName)}&Bio=${encodeURIComponent(updatedBio)}&phone=${encodeURIComponent(updatedPhone)}&linkedin%20profile=${encodeURIComponent(updatedLinkedin)}`;
-    
-                    console.log("🚀 Sending API Request to:", apiUrl);
-    
-                    // Send update request
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        }
-                    });
-    
-                    const result = await response.json();
-                    console.log("📥 API Response:", result);
-    
-                    if (response.ok) {
-                        alert("Profile updated successfully!");
-                    } else {
-                        alert(`⚠️ Failed to update profile: ${result.error || 'Unknown error'}`);
-                    }
-                } catch (error) {
-                    console.error("❌ Error updating profile:", error);
-                    alert("An error occurred while updating the profile.");
-                }
-            });
-        } else {
-            console.log("❌ Save Changes button NOT found in the DOM!");
-        }
-    });
-    
-    
+
+ document.addEventListener('DOMContentLoaded', () => {
+
+});
+
+
 
     // Event listener for the "Send" button
     sendButton.addEventListener('click', async () => {
@@ -829,3 +761,83 @@ function handleLogin() {
 // Call handleLogin on page load
 document.addEventListener('DOMContentLoaded', handleLogin);
  
+const saveChangesBtn = document.getElementById('saveChangesBtn');
+console.log("Button Element:", saveChangesBtn);
+
+
+if (saveChangesBtn) {
+    saveChangesBtn.addEventListener('click', async(event) => {
+        event.preventDefault();
+        console.log("✅ Save Changes button clicked");
+
+        // Extract updated values from form fields
+        const updatedName = document.getElementById('fullName')?.value.trim();
+        const updatedBio = document.getElementById('about')?.value.trim();
+        const updatedPhone = document.getElementById('Phone')?.value.trim();
+        const updatedEmail = document.getElementById('Email')?.value.trim();
+        const updatedLinkedin = document.getElementById('Linkedin')?.value.trim();
+
+        // Ensure required fields are provided
+        if (!updatedEmail) {
+            alert("Email is required.");
+            return;
+        }
+
+        // Retrieve the ID token from localStorage
+        const idToken = localStorage.getItem('idToken');
+        if (!idToken) {
+            alert("User is not authenticated.");
+            return;
+        }
+
+        console.log("🔑 ID Token found, extracting user email...");
+        const base64Url = idToken.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const decodedToken = JSON.parse(decodeURIComponent(
+            atob(base64)
+                .split('')
+                .map((c) => `%${('00' + c.charCodeAt(0).toString(16)).slice(-2)}`)
+                .join('')
+        ));
+
+        const userEmail = decodedToken.email || updatedEmail;
+        console.log("📧 User Email:", userEmail);
+
+        try {
+            // Construct API URL with query parameters
+            const apiUrl = `https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/updateProfile`;
+
+            console.log("🚀 Sending API Request to:", apiUrl);
+
+            // Send update request with JSON body
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': idToken, // Assuming the Lambda expects an Authorization header
+                },
+                body: JSON.stringify({
+                    Email: userEmail,
+                    Name: updatedName,
+                    Bio: updatedBio,
+                    phone: updatedPhone,
+                    linkedin: updatedLinkedin,
+                }),
+            });
+
+            const result = await response.json();
+            console.log("📥 API Response:", result);
+
+            if (response.ok) {
+                alert("Profile updated successfully!");
+            } else {
+                alert(`⚠️ Failed to update profile: ${result.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error("❌ Error updating profile:", error);
+            alert("An error occurred while updating the profile.");
+        }
+    });
+} else {
+    console.log("❌ Save Changes button NOT found in the DOM!");
+}

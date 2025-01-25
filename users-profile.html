@@ -324,14 +324,14 @@
                 </ol>
             </nav>
         </div><!-- End Page Title -->
-
+    
         <section class="section profile">
             <div class="row">
                 <div class="col-xl-4">
-
+    
                     <div class="card">
                         <div class="card-body profile-card pt-4 d-flex flex-column align-items-center">
-
+    
                             <img src="assets/img/profile-img.jpg" alt="Profile" class="rounded-circle">
                             <h2 class="user-name">Default Name</h2>
                             <div class="social-links mt-2">
@@ -342,65 +342,65 @@
                             </div>
                         </div>
                     </div>
-
+    
                 </div>
-
+    
                 <div class="col-xl-8">
-
+    
                     <div class="card">
                         <div class="card-body pt-3">
                             <!-- Bordered Tabs -->
                             <ul class="nav nav-tabs nav-tabs-bordered">
-
+    
                                 <li class="nav-item">
                                     <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profile-overview">Overview</button>
                                 </li>
-
+    
                                 <li class="nav-item">
                                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-edit">Edit Profile</button>
                                 </li>
-
+    
                                 <li class="nav-item">
                                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-settings">Settings</button>
                                 </li>
-
+    
                                 <li class="nav-item">
                                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-change-password">Change Password</button>
                                 </li>
-
+    
                             </ul>
                             <div class="tab-content pt-2">
-
+    
                                 <div class="tab-pane fade show active profile-overview" id="profile-overview">
                                     <h5 class="card-title">About</h5>
                                     <p class="small fst-italic user-bio">Almog is a less then avg student who is lazy and loves everything to be explain short fast and examples on cars.</p>
-
+    
                                     <h5 class="card-title">Profile Details</h5>
-
+    
                                     <div class="row">
                                         <div class="col-lg-3 col-md-4 label ">Full Name</div>
                                         <div class="col-lg-9 col-md-8 user-name">Default Name</div>
                                     </div>
-
+    
                                     <div class="row">
                                         <div class="col-lg-3 col-md-4 label">Phone</div>
                                         <div class="col-lg-9 col-md-8 user-phone">0549842243</div>
                                     </div>
-
+    
                                     <div class="row">
                                         <div class="col-lg-3 col-md-4 label">Email</div>
                                         <div class="col-lg-9 col-md-8 user-email">almog611@gmail.com</div>
                                     </div>
-
+    
                                     <div class="row">
                                         <div class="col-lg-3 col-md-4 label">LinkedIn Profile</div>
                                         <div class="col-lg-9 col-md-8 user-linkedin"><a href="https://www.linkedin.com/in/almog-zinger/" target="_blank">https://www.linkedin.com/in/almog-zinger/</a></div>
                                     </div>
-
+    
                                 </div>
-
+    
                                 <div class="tab-pane fade profile-edit pt-3" id="profile-edit">
-
+    
                                     <!-- Profile Edit Form -->
                                     <form>
                                         <div class="row mb-3">
@@ -413,54 +413,54 @@
                                                 </div>
                                             </div>
                                         </div>
-
+    
                                         <div class="row mb-3">
                                             <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Full Name</label>
                                             <div class="col-md-8 col-lg-9">
                                                 <input name="fullName" type="text" class="form-control user-name" id="fullName" value="Default Name">
                                             </div>
                                         </div>
-
+    
                                         <div class="row mb-3">
                                             <label for="about" class="col-md-4 col-lg-3 col-form-label">About</label>
                                             <div class="col-md-8 col-lg-9">
                                                 <textarea name="about" class="form-control user-bio" id="about" style="height: 100px">Almog is a less then avg student who is lazy and loves everything to be explain short fast and examples on cars.</textarea>
                                             </div>
                                         </div>
-
+    
                                         <div class="row mb-3">
                                             <label for="Phone" class="col-md-4 col-lg-3 col-form-label">Phone</label>
                                             <div class="col-md-8 col-lg-9">
                                                 <input name="phone" type="text" class="form-control" id="Phone" value="054-9842243">
                                             </div>
                                         </div>
-
+    
                                         <div class="row mb-3">
                                             <label for="Email" class="col-md-4 col-lg-3 col-form-label">Email</label>
                                             <div class="col-md-8 col-lg-9">
                                                 <input name="email" type="email" class="form-control" id="Email" value="almog611@gmail.com">
                                             </div>
                                         </div>
-
+    
                                         <div class="row mb-3">
                                             <label for="Linkedin" class="col-md-4 col-lg-3 col-form-label">Linkedin Profile</label>
                                             <div class="col-md-8 col-lg-9">
                                                 <input name="linkedin" type="text" class="form-control" id="Linkedin" value="https://www.linkedin.com/in/almog-zinger/">
                                             </div>
                                         </div>
-
+    
                                         <div class="text-center">
-                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                            <button type="button" class="btn btn-primary" id="saveChangesBtn">Save Changes</button>
                                         </div>
                                     </form><!-- End Profile Edit Form -->
-
+    
                                 </div>
-
+    
                                 <div class="tab-pane fade pt-3" id="profile-settings">
-
+    
                                     <!-- Settings Form -->
                                     <form>
-
+    
                                         <div class="row mb-3">
                                             <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Email Notifications</label>
                                             <div class="col-md-8 col-lg-9">
@@ -478,54 +478,55 @@
                                                 </div>
                                             </div>
                                         </div>
-
+    
                                         <div class="text-center">
-                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                            <button type="button" class="btn btn-primary">Save Changes</button>
                                         </div>
                                     </form><!-- End settings Form -->
-
+    
                                 </div>
-
+    
                                 <div class="tab-pane fade pt-3" id="profile-change-password">
                                     <!-- Change Password Form -->
                                     <form>
-
+    
                                         <div class="row mb-3">
                                             <label for="current-Password" class="col-md-4 col-lg-3 col-form-label">Current Password</label>
                                             <div class="col-md-8 col-lg-9">
                                                 <input name="password" type="password" class="form-control" id="current-Password">
                                             </div>
                                         </div>
-
+    
                                         <div class="row mb-3">
                                             <label for="newPassword" class="col-md-4 col-lg-3 col-form-label">New Password</label>
                                             <div class="col-md-8 col-lg-9">
                                                 <input name="newpassword" type="password" class="form-control" id="newPassword">
                                             </div>
                                         </div>
-
+    
                                         <div class="row mb-3">
                                             <label for="renewPassword" class="col-md-4 col-lg-3 col-form-label">Re-enter New Password</label>
                                             <div class="col-md-8 col-lg-9">
                                                 <input name="renewpassword" type="password" class="form-control" id="renewPassword">
                                             </div>
                                         </div>
-
+    
                                         <div class="text-center">
                                             <button type="submit" class="btn btn-primary">Change Password</button>
                                         </div>
                                     </form><!-- End Change Password Form -->
-
+    
                                 </div>
-
+    
                             </div><!-- End Bordered Tabs -->
-
+    
                         </div>
                     </div>
-
+    
                 </div>
             </div>
         </section>
+    
 
     </main><!-- End #main -->
     <!-- ======= Footer ======= -->
@@ -548,7 +549,7 @@
     <script src="assets/vendor/tinymce/tinymce.min.js"></script>
     <script src="assets/vendor/php-email-form/validate.js"></script>
     <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1360.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/5.2.5/amazon-cognito-identity.min.js"></script>
+    
     <!-- Template Main JS File -->
     <script src="https://cdn.jsdelivr.net/npm/aws-amplify@latest/dist/aws-amplify.min.js"></script>
     <script type="module" src="assets/js/main.js"></script>
