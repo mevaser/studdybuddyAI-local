@@ -272,68 +272,235 @@
         });
     });
 
+    // Consolidated Login Management with Additional Functions
+
     /**
-     * Login Form Handling
+     * Extract query parameters from URL
      */
-    document.addEventListener('DOMContentLoaded', () => {
-        const loginForm = document.getElementById('loginForm');
+    function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+    }
 
-        if (loginForm) {
-            loginForm.addEventListener('submit', async (event) => {
-                event.preventDefault(); // Prevent the form from reloading the page
+    /**
+     * Parse tokens from URL hash
+     */
+    function parseTokens() {
+        const hash = window.location.hash.substring(1); // Remove leading '#'
+        const params = {};
+        hash.split('&').forEach(param => {
+            const [key, value] = param.split('=');
+            params[key] = decodeURIComponent(value);
+        });
+        return params;
+    }
 
-                // Retrieve user inputs
-                const email = document.getElementById('yourUsername')?.value.trim();
-                const password = document.getElementById('yourPassword')?.value.trim();
+    /**
+     * Decode JWT token and extract payload
+     */
+    function parseJwt(token) {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+            atob(base64)
+                .split('')
+                .map((c) => `%${('00' + c.charCodeAt(0).toString(16)).slice(-2)}`)
+                .join('')
+        );
+        return JSON.parse(jsonPayload);
+    }
 
-                // Validate user inputs
-                if (!email || !password) {
-                    alert('Please enter both email and password.');
-                    return;
-                }
+    /**
+     * Save tokens to localStorage
+     */
+    function saveTokens(tokens) {
+        if (tokens.id_token) localStorage.setItem('idToken', tokens.id_token);
+        if (tokens.access_token) localStorage.setItem('accessToken', tokens.access_token);
+        if (tokens.refresh_token) localStorage.setItem('refreshToken', tokens.refresh_token);
+    }
 
-                // Disable the login button and show processing message
-                const loginButton = loginForm.querySelector('button');
-                loginButton.textContent = 'Logging in...';
-                loginButton.disabled = true;
+    /**
+     * Retrieve tokens from localStorage
+     */
+    function getTokensFromStorage() {
+        return {
+            id_token: localStorage.getItem('idToken'),
+            access_token: localStorage.getItem('accessToken'),
+            refresh_token: localStorage.getItem('refreshToken')
+        };
+    }
 
-                try {
-                    // API Gateway endpoint
-                    const response = await fetch('https://kzgutwddhk.execute-api.us-east-1.amazonaws.com/askQuestion', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            email,       // User email
-                            password,    // User password
-                        }),
-                    });
+    /**
+     * Handle login process via OAuth2
+     */
+    async function handleOAuthLogin() {
+        let tokens = getTokensFromStorage();
 
-                    const result = await response.json();
-
-                    // Handle response
-                    if (response.ok) {
-                        alert(`Welcome, ${result.name || 'User'}!`);
-                        window.location.href = 'dashboard.html'; // Redirect to the dashboard page
-                    } else {
-                        alert(result.error || 'Login failed. Please check your credentials.');
-                    }
-                } catch (error) {
-                    console.error('Error logging in:', error);
-                    alert('An error occurred while logging in. Please try again.');
-                } finally {
-                    // Re-enable the login button
-                    loginButton.textContent = 'Login';
-                    loginButton.disabled = false;
-                }
-            });
+        if (!tokens.id_token) {
+            tokens = parseTokens(); // Extract tokens from the URL
+            if (tokens.id_token) {
+                saveTokens(tokens); // Save tokens to localStorage
+                window.history.replaceState({}, document.title, '/'); // Clean up URL
+            } else {
+                console.error("No ID token found in URL or localStorage.");
+                return;
+            }
         }
+
+        // Decode user info from the ID token
+        try {
+            const userInfo = parseJwt(tokens.id_token);
+            console.log("User Info:", userInfo);
+
+            // Update the UI with user details
+            updateUserInfo(userInfo);
+        } catch (error) {
+            console.error("Error decoding ID token:", error);
+        }
+    }
+
+    /**
+     * Handle login process via form (email/password)
+     */
+    async function handleFormLogin(event) {
+        event.preventDefault(); // Prevent form reload
+
+        const email = document.getElementById('yourUsername')?.value.trim();
+        const password = document.getElementById('yourPassword')?.value.trim();
+
+        if (!email || !password) {
+            alert('Please enter both email and password.');
+            return;
+        }
+
+        const loginButton = event.target.querySelector('button');
+        loginButton.textContent = 'Logging in...';
+        loginButton.disabled = true;
+
+        try {
+            const response = await fetch('https://kzgutwddhk.execute-api.us-east-1.amazonaws.com/askQuestion', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert(`Welcome, ${result.name || 'User'}!`);
+                window.location.href = 'dashboard.html';
+            } else {
+                alert(result.error || 'Login failed. Please check your credentials.');
+            }
+        } catch (error) {
+            console.error('Error logging in:', error);
+            alert('An error occurred while logging in. Please try again.');
+        } finally {
+            loginButton.textContent = 'Login';
+            loginButton.disabled = false;
+        }
+    }
+
+    /**
+     * Update the UI with user details
+     */
+    function updateUserInfo(userInfo) {
+        document.querySelectorAll('.user-name').forEach(el => {
+            el.textContent = userInfo.name || 'Guest';
+        });
+        document.querySelectorAll('.user-email').forEach(el => {
+            el.textContent = userInfo.email || 'No Email';
+        });
+    }
+
+    /**
+     * Save profile changes to the server
+     */
+    async function saveProfileChanges() {
+        const updatedName = document.getElementById('fullName')?.value.trim();
+        const updatedBio = document.getElementById('about')?.value.trim();
+        const updatedPhone = document.getElementById('Phone')?.value.trim();
+        const updatedEmail = document.getElementById('Email')?.value.trim();
+        const updatedLinkedin = document.getElementById('Linkedin')?.value.trim();
+
+        if (!updatedEmail) {
+            alert("Email is required.");
+            return;
+        }
+
+        const idToken = localStorage.getItem('idToken');
+        if (!idToken) {
+            alert("User is not authenticated.");
+            return;
+        }
+
+        const userEmail = parseJwt(idToken).email || updatedEmail;
+
+        try {
+            const apiUrl = `https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/updateProfile`;
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': idToken
+                },
+                body: JSON.stringify({
+                    Email: userEmail,
+                    Name: updatedName,
+                    Bio: updatedBio,
+                    phone: updatedPhone,
+                    linkedin: updatedLinkedin
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert("Profile updated successfully!");
+            } else {
+                alert(`Failed to update profile: ${result.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            alert("An error occurred while updating the profile.");
+        }
+    }
+
+    /**
+     * Resize eCharts on container size change
+     */
+    function handleChartResize() {
+        const mainContainer = document.querySelector('#main');
+        if (mainContainer) {
+            setTimeout(() => {
+                new ResizeObserver(() => {
+                    document.querySelectorAll('.echart').forEach(chartElement => {
+                        const chartInstance = echarts.getInstanceByDom(chartElement);
+                        if (chartInstance) chartInstance.resize();
+                    });
+                }).observe(mainContainer);
+            }, 200);
+        }
+    }
+
+    // Attach event listeners for form login
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleFormLogin);
+    }
+
+    // Initialize OAuth login and additional features on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        handleOAuthLogin();
+        handleChartResize();
     });
 
+
     /**
-     * Autoresize echart charts
-     */
+         * Autoresize echart charts
+         */
     const mainContainer = select('#main');
     if (mainContainer) {
         setTimeout(() => {
@@ -345,74 +512,170 @@
         }, 200);
     }
 
-})();
+
+    /* Chat Handling */
+    document.addEventListener('DOMContentLoaded', () => {
+        const chatWindow = document.getElementById('chat-window');
+        const chatInput = document.getElementById('chat-input');
+        const sendButton = document.getElementById('send-btn');
+
+        // Check if necessary elements are present
+        if (!chatWindow || !chatInput || !sendButton) {
+            console.log("One or more required elements are missing!");
+            return;
+        }
+
+        /**
+         * Escape HTML to prevent XSS attacks.
+         * @param {string} str - Input string to escape.
+         * @returns {string} Escaped HTML string.
+         */
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.innerText = str;
+            return div.innerHTML;
+        }
+
+        /**
+         * Add a message to the chat window.
+         * @param {string} content - The message content.
+         * @param {string} sender - The sender of the message ('user' or 'api').
+         */
+        function addMessage(content, sender = 'user') {
+            const message = document.createElement('div');
+            message.className = `message ${sender}`;
+            message.innerHTML = escapeHTML(content).replace(/\n/g, '<br>'); // Preserve line breaks
+            chatWindow.appendChild(message);
+            chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to the bottom
+        }
+
+        // Event listener for the "Save Changes" button - UpdateBio
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+        });
 
 
 
-/* Chat Handling */
-document.addEventListener('DOMContentLoaded', () => {
-    const chatWindow = document.getElementById('chat-window');
-    const chatInput = document.getElementById('chat-input');
-    const sendButton = document.getElementById('send-btn');
+        // Event listener for the "Send" button
+        sendButton.addEventListener('click', async () => {
+            const message = chatInput.value.trim();
+            if (!message) return;
 
-    // Check if necessary elements are present
-    if (!chatWindow || !chatInput || !sendButton) {
-        console.log("One or more required elements are missing!");
-        return;
-    }
+            // Add the user's message to the chat
+            addMessage(message, 'user'); // Corrected variable name
+            chatInput.value = ''; // Clear the input field
+            chatInput.focus(); // Refocus the input field
 
-    /**
-     * Escape HTML to prevent XSS attacks.
-     * @param {string} str - Input string to escape.
-     * @returns {string} Escaped HTML string.
-     */
-    function escapeHTML(str) {
-        const div = document.createElement('div');
-        div.innerText = str;
-        return div.innerHTML;
-    }
+            try {
+                // Retrieve the ID token from localStorage
+                const idToken = localStorage.getItem('idToken');
+                if (!idToken) {
+                    addMessage('Authentication failed. Please log in again.', 'api');
+                    return;
+                }
 
-    /**
-     * Add a message to the chat window.
-     * @param {string} content - The message content.
-     * @param {string} sender - The sender of the message ('user' or 'api').
-     */
-    function addMessage(content, sender = 'user') {
-        const message = document.createElement('div');
-        message.className = `message ${sender}`;
-        message.innerHTML = escapeHTML(content).replace(/\n/g, '<br>'); // Preserve line breaks
-        chatWindow.appendChild(message);
-        chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to the bottom
-    }
+                // Decode the JWT token to extract the user's email
+                const base64Url = idToken.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const decodedToken = JSON.parse(decodeURIComponent(
+                    atob(base64)
+                        .split('')
+                        .map((c) => `%${('00' + c.charCodeAt(0).toString(16)).slice(-2)}`)
+                        .join('')
+                ));
 
- // Event listener for the "Save Changes" button - UpdateBio
+                const userEmail = decodedToken.email;
+                if (!userEmail) {
+                    addMessage('Email not found in token.', 'api');
+                    return;
+                }
+
+                // Call the API Gateway endpoint
+                const response = await fetch('https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/AskGPT   ', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Origin': window.location.origin,
+                    },
+                    body: JSON.stringify({
+                        email: userEmail, // Use the email from the token
+                        question: message
+                    })
+                });
+
+                console.log(JSON.stringify({
+                    email: userEmail, // Use the email from the token
+                    question: message
+                }));
+
+                if (!response.ok) {
+                    throw new Error('Failed to get a response from the server');
+                }
+
+                const result = await response.json();
+                console.log(result);
+
+                // Parse the `body` string if it exists
+                let parsedBody = {};
+                if (result.body) {
+                    parsedBody = JSON.parse(result.body);
+                }
+
+                // Add the GPT's answer to the chat
+                if (parsedBody.answer) {
+                    addMessage(parsedBody.answer, 'api');
+                } else {
+                    addMessage('Sorry, something went wrong. Please try again.', 'api');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('An error occurred while fetching the answer. Please try again.', 'api');
+            }
+        });
+
+        // Handle "Enter" key press
+        chatInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Prevent new line
+                sendButton.click(); // Trigger the send button
+            }
+        });
+    });
 
 
- document.addEventListener('DOMContentLoaded', () => {
-
-});
-
+    const saveChangesBtn = document.getElementById('saveChangesBtn');
+    console.log("Button Element:", saveChangesBtn);
 
 
-    // Event listener for the "Send" button
-    sendButton.addEventListener('click', async () => {
-        const message = chatInput.value.trim();
-        if (!message) return;
+    if (saveChangesBtn) {
+        saveChangesBtn.addEventListener('click', async (event) => {
+            event.preventDefault();
+            console.log("✅ Save Changes button clicked");
 
-        // Add the user's message to the chat
-        addMessage(message, 'user'); // Corrected variable name
-        chatInput.value = ''; // Clear the input field
-        chatInput.focus(); // Refocus the input field
+            // Extract updated values from form fields
+            const updatedName = document.getElementById('fullName')?.value.trim();
+            const updatedBio = document.getElementById('about')?.value.trim();
+            const updatedPhone = document.getElementById('Phone')?.value.trim();
+            const updatedEmail = document.getElementById('Email')?.value.trim();
+            const updatedLinkedin = document.getElementById('Linkedin')?.value.trim();
 
-        try {
-            // Retrieve the ID token from localStorage
-            const idToken = localStorage.getItem('idToken');
-            if (!idToken) {
-                addMessage('Authentication failed. Please log in again.', 'api');
+            // Ensure required fields are provided
+            if (!updatedEmail) {
+                alert("Email is required.");
                 return;
             }
 
-            // Decode the JWT token to extract the user's email
+            // Retrieve the ID token from localStorage
+            const idToken = localStorage.getItem('idToken');
+            if (!idToken) {
+                alert("User is not authenticated.");
+                return;
+            }
+
+            console.log("🔑 ID Token found, extracting user email...");
             const base64Url = idToken.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
             const decodedToken = JSON.parse(decodeURIComponent(
@@ -422,422 +685,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     .join('')
             ));
 
-            const userEmail = decodedToken.email;
-            if (!userEmail) {
-                addMessage('Email not found in token.', 'api');
-                return;
+            const userEmail = decodedToken.email || updatedEmail;
+            console.log("📧 User Email:", userEmail);
+
+            try {
+                // Construct API URL with query parameters
+                const apiUrl = `https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/updateProfile`;
+
+                console.log("🚀 Sending API Request to:", apiUrl);
+
+                // Send update request with JSON body
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': idToken, // Assuming the Lambda expects an Authorization header
+                    },
+                    body: JSON.stringify({
+                        Email: userEmail,
+                        Name: updatedName,
+                        Bio: updatedBio,
+                        phone: updatedPhone,
+                        linkedin: updatedLinkedin,
+                    }),
+                });
+
+                const result = await response.json();
+                console.log("📥 API Response:", result);
+
+                if (response.ok) {
+                    alert("Profile updated successfully!");
+                } else {
+                    alert(`⚠️ Failed to update profile: ${result.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error("❌ Error updating profile:", error);
+                alert("An error occurred while updating the profile.");
             }
-
-            // Call the API Gateway endpoint
-            const response = await fetch('https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/AskGPT', {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'Origin': window.location.origin,
-                },
-                body: JSON.stringify({
-                    email: userEmail, // Use the email from the token
-                    question: message
-                })
-            });
-
-            console.log(JSON.stringify({
-                email: userEmail, // Use the email from the token
-                question: message
-            }));
-
-            if (!response.ok) {
-                throw new Error('Failed to get a response from the server');
-            }
-
-            const result = await response.json();
-            console.log(result);
-
-            // Parse the `body` string if it exists
-            let parsedBody = {};
-            if (result.body) {
-                parsedBody = JSON.parse(result.body);
-            }
-
-            // Add the GPT's answer to the chat
-            if (parsedBody.answer) {
-                addMessage(parsedBody.answer, 'api');
-            } else {
-                addMessage('Sorry, something went wrong. Please try again.', 'api');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            addMessage('An error occurred while fetching the answer. Please try again.', 'api');
-        }
-    });
-
-    // Handle "Enter" key press
-    chatInput.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault(); // Prevent new line
-            sendButton.click(); // Trigger the send button
-        }
-    });
-});
-
-
-/* login handler*/
-function getAuthorizationCode() {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('code'); // This retrieves the 'code' parameter from the URL
-}
-
-// Check if there's an authorization code in the URL
-const authCode = getAuthorizationCode();
-if (authCode) {
-    console.log("Authorization Code:", authCode);
-    // Proceed to exchange the code for tokens
-}
-
-async function exchangeCodeForToken(authCode) {
-    try {
-        console.log("Authorization Code:", authCode); // Log the authCode
-
-        const tokenEndpoint = 'https://us-east-1yfkzkrdrk.auth.us-east-1.amazoncognito.com/oauth2/token';
-        const clientId = '6q9dfaem3aaobkec9fs0p2n07e';
-        const redirectUri = 'http://studybuddy-website.s3-website-us-east-1.amazonaws.com';
-        const body = new URLSearchParams({
-            grant_type: 'authorization_code',
-            client_id: clientId,
-            redirect_uri: redirectUri,
-            code: authCode
         });
-
-        const response = await fetch(tokenEndpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: body
-        });
-
-        if (!response.ok) {
-            console.error("Failed to exchange code:", response.status, response.statusText);
-            return;
-        }
-
-        const data = await response.json();
-        console.log("Token Exchange Response:", data); // Log the full response
-
-        // Store tokens in localStorage
-        localStorage.setItem('idToken', data.id_token);
-        localStorage.setItem('accessToken', data.access_token);
-        localStorage.setItem('refreshToken', data.refresh_token);
-        console.log("Tokens saved to localStorage.");
-    } catch (error) {
-        console.error("Error exchanging code for tokens:", error);
+    } else {
+        console.log("❌ Save Changes button NOT found in the DOM!");
     }
-}
-
-async function fetchUserDetails() {
-    const idToken = localStorage.getItem('idToken');
-    if (!idToken) {
-        console.error('ID token not found.');
-        return;
-    }
-
-    const decodedToken = JSON.parse(atob(idToken.split('.')[1])); // Decode the JWT token
-    return decodedToken; // Contains user attributes like email, name, etc.
-}
-document.addEventListener('DOMContentLoaded', async () => {
-    const authCode = getAuthorizationCode();
-
-    if (authCode) {
-        await exchangeCodeForToken(authCode);
-        window.history.replaceState({}, document.title, '/');
-    }
-
-    const userDetails = await fetchUserDetails();
-    if (userDetails) {
-        document.querySelectorAll('.user-name').forEach((el) => {
-            el.textContent = userDetails.name || 'Guest';
-        });
-
-        document.querySelectorAll('.user-email').forEach((el) => {
-            el.textContent = userDetails.email || 'No email';
-        });
-    }
-});
-
-
-// Function to extract query parameters from the URL
-function getQueryParam(param) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(param);
-}
-
-
-
-// Function to handle login and display user info
-// Function to parse tokens from the URL hash
-function parseHashParams() {
-    const hash = window.location.hash.substring(1); // Remove the leading '#'
-    const params = {};
-    hash.split('&').forEach(param => {
-        const [key, value] = param.split('=');
-        params[key] = decodeURIComponent(value);
-    });
-    return params;
-}
-
-/**
- * Parse tokens from URL hash or query parameters
- */
-function parseTokens() {
-    const hash = window.location.hash.substring(1); // Remove leading '#'
-    const params = {};
-    hash.split('&').forEach(param => {
-        const [key, value] = param.split('=');
-        params[key] = decodeURIComponent(value);
-    });
-    return params;
-}
-
-// Function to decode JWT token and get the email
-function parseJwt(token) {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-        atob(base64)
-            .split('')
-            .map((c) => `%${('00' + c.charCodeAt(0).toString(16)).slice(-2)}`)
-            .join('')
-    );
-    return JSON.parse(jsonPayload);
-}
-
-// Function to fetch student profile from the API Gateway
-async function fetchStudentProfile() {
-    const idToken = localStorage.getItem('idToken'); // Retrieve the ID token
-    if (!idToken) {
-        alert('User is not authenticated.');
-        return;
-    }
-
-    // Decode the token to get the email
-    const decodedToken = parseJwt(idToken);
-    const email = decodedToken.email;
-
-    if (!email) {
-        alert('Email not found in token.');
-        return;
-    }
-
-    console.log('Email being sent:', email); // Log the email
-
-    try {
-        // Construct the API URL with the query string parameter
-        const apiUrl = `https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/updateProfile?Email=${encodeURIComponent(email)}`;
-
-        // Call the API Gateway to fetch the student profile
-        const response = await fetch(apiUrl, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-
-        if (response.ok) {
-            const profile = await response.json();
-            console.log('API Response:', profile); // Log the full API response
-            updateProfileUI(profile); // Update the UI with the fetched profile
-        } else {
-            const error = await response.json();
-            console.error('Failed to fetch profile:', error);
-            alert('Failed to fetch profile. Please try again.');
-        }
-    } catch (error) {
-        console.error('Error fetching profile:', error);
-        alert('An error occurred. Please try again later.');
-    }
-}
-
-// Function to update the UI with profile data
-function updateProfileUI(profile) {
-    const fullNameEl = document.getElementById('fullName');
-    const aboutEl = document.getElementById('about');
-    const phoneEl = document.getElementById('Phone');
-    const emailEl = document.getElementById('Email');
-    const linkedinEl = document.getElementById('Linkedin');
-
-    // Update the fields in the form
-    if (fullNameEl) fullNameEl.value = profile.Name || '';
-    if (aboutEl) aboutEl.value = profile.Bio || '';
-    if (phoneEl) phoneEl.value = profile.phone || '';
-    if (emailEl) emailEl.value = profile.Email || '';
-    if (linkedinEl) linkedinEl.value = profile['linkedin profile'] || '';
-
-    // Update the `.user-name` element with the fetched full name
-    document.querySelectorAll('.user-name').forEach((el) => {
-        el.textContent = profile.Name || 'Guest';
-    });
-        
-    document.querySelectorAll('.user-phone').forEach((el) => {
-        el.textContent = profile.phone || 'Guest';
-    });
-
-    document.querySelectorAll('.user-email').forEach((el) => {
-        el.textContent = profile.Email || 'Guest';
-    });
-
-    document.querySelectorAll('.user-bio').forEach((el) => {
-        el.textContent = profile.Bio || 'Guest';
-    });
-
-
-}
-
-
-// Call fetchStudentProfile on page load
-document.addEventListener('DOMContentLoaded', fetchStudentProfile);
-
-/**
- * Function to update user info in the UI
- * @param {Object} userInfo - Object containing user details
- */
-function updateUserInfo(userInfo) {
-    // Update the HTML elements with the user details
-    document.querySelectorAll('.user-name').forEach((el) => {
-        el.textContent = userInfo.name || 'Guest';
-    });
-
-    document.querySelectorAll('.user-email').forEach((el) => {
-        el.textContent = userInfo.email || 'No Email';
-    });
-
-    // If there are other elements to update, add them here
-}
-
-
-/**
- * Handle login process
- */
-function handleLogin() {
-    // Try to get tokens from localStorage first
-    let idToken = localStorage.getItem('idToken');
-    let accessToken = localStorage.getItem('accessToken');
-    let refreshToken = localStorage.getItem('refreshToken');
-
-    if (!idToken) {
-        // If tokens are not in localStorage, attempt to parse them from the URL
-        const tokens = parseTokens(); // Extract tokens from the URL hash
-        if (tokens.id_token) {
-            idToken = tokens.id_token;
-            accessToken = tokens.access_token;
-            refreshToken = tokens.refresh_token;
-
-            // Save tokens to localStorage for future use
-            localStorage.setItem('idToken', idToken);
-            localStorage.setItem('accessToken', accessToken);
-            localStorage.setItem('refreshToken', refreshToken);
-
-            // Remove tokens from the URL to clean up the address bar
-            window.history.replaceState({}, document.title, '/studybuddy/index.html');
-        } else {
-            console.error("No ID token found in the URL or localStorage.");
-            return; // Exit if no tokens are found
-        }
-    }
-
-    // Decode user info from the ID token
-    try {
-        const userInfo = parseJwt(idToken);
-        console.log("User Info:", userInfo);
-
-        // Update the page with user details
-        updateUserInfo(userInfo);
-    } catch (error) {
-        console.error("Error decoding ID token:", error);
-    }
-}
-
-
-// Call handleLogin on page load
-document.addEventListener('DOMContentLoaded', handleLogin);
- 
-const saveChangesBtn = document.getElementById('saveChangesBtn');
-console.log("Button Element:", saveChangesBtn);
-
-
-if (saveChangesBtn) {
-    saveChangesBtn.addEventListener('click', async(event) => {
-        event.preventDefault();
-        console.log("✅ Save Changes button clicked");
-
-        // Extract updated values from form fields
-        const updatedName = document.getElementById('fullName')?.value.trim();
-        const updatedBio = document.getElementById('about')?.value.trim();
-        const updatedPhone = document.getElementById('Phone')?.value.trim();
-        const updatedEmail = document.getElementById('Email')?.value.trim();
-        const updatedLinkedin = document.getElementById('Linkedin')?.value.trim();
-
-        // Ensure required fields are provided
-        if (!updatedEmail) {
-            alert("Email is required.");
-            return;
-        }
-
-        // Retrieve the ID token from localStorage
-        const idToken = localStorage.getItem('idToken');
-        if (!idToken) {
-            alert("User is not authenticated.");
-            return;
-        }
-
-        console.log("🔑 ID Token found, extracting user email...");
-        const base64Url = idToken.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const decodedToken = JSON.parse(decodeURIComponent(
-            atob(base64)
-                .split('')
-                .map((c) => `%${('00' + c.charCodeAt(0).toString(16)).slice(-2)}`)
-                .join('')
-        ));
-
-        const userEmail = decodedToken.email || updatedEmail;
-        console.log("📧 User Email:", userEmail);
-
-        try {
-            // Construct API URL with query parameters
-            const apiUrl = `https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/updateProfile`;
-
-            console.log("🚀 Sending API Request to:", apiUrl);
-
-            // Send update request with JSON body
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': idToken, // Assuming the Lambda expects an Authorization header
-                },
-                body: JSON.stringify({
-                    Email: userEmail,
-                    Name: updatedName,
-                    Bio: updatedBio,
-                    phone: updatedPhone,
-                    linkedin: updatedLinkedin,
-                }),
-            });
-
-            const result = await response.json();
-            console.log("📥 API Response:", result);
-
-            if (response.ok) {
-                alert("Profile updated successfully!");
-            } else {
-                alert(`⚠️ Failed to update profile: ${result.error || 'Unknown error'}`);
-            }
-        } catch (error) {
-            console.error("❌ Error updating profile:", error);
-            alert("An error occurred while updating the profile.");
-        }
-    });
-} else {
-    console.log("❌ Save Changes button NOT found in the DOM!");
-}
+})();
