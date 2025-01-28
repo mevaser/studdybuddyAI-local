@@ -91,6 +91,8 @@
   function saveTokens(userId, tokens) {
     if (tokens.id_token) {
       sessionStorage.setItem(`idToken_${userId}`, tokens.id_token);
+      sessionStorage.setItem(`groups`, getUserGroupsFromToken(tokens.id_token));
+
     }
     if (tokens.access_token) {
       sessionStorage.setItem(`accessToken_${userId}`, tokens.access_token);
@@ -110,6 +112,7 @@
 
   function clearTokens(userId) {
     sessionStorage.removeItem(`idToken_${userId}`);
+    sessionStorage.removeItem('groups');
     sessionStorage.removeItem(`accessToken_${userId}`);
     sessionStorage.removeItem(`refreshToken_${userId}`);
   }
@@ -152,6 +155,24 @@
       }
     } else {
       console.log("Valid token already in sessionStorage.");
+    }
+
+    //CHECK OF SUB AND USER GROUP
+    // 🔹 LOG USER ID (sub) & GROUP AT THE END
+    const idToken = sessionStorage.getItem("idToken_defaultUser");
+    if (idToken) {
+      const decodedToken = parseJwt(idToken);
+      console.log("Decoded Token:", decodedToken);
+
+      // Extract and log the user ID (sub)
+      const userId = decodedToken?.sub || "Unknown User ID";
+      console.log("🔑 User ID (sub):", userId);
+
+      // Extract and log the user group (if exists)
+      const userGroups = decodedToken["cognito:groups"] || "No group assigned";
+      console.log("👥 User Group:", userGroups);
+    } else {
+      console.warn("No ID Token found in sessionStorage.");
     }
   }
 
@@ -718,5 +739,11 @@
         });
       }).observe(mainContainer);
     }, 200);
+  }
+  function getUserGroupsFromToken(idToken) {
+    if (!idToken) return null;
+    const decodedToken = parseJwt(idToken);
+    const userGroups = decodedToken["cognito:groups"] || null;
+    return userGroups
   }
 })();
