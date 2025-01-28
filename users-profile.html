@@ -297,6 +297,13 @@
                     <span>Teacher</span>
                 </a>
             </li><!-- End Teacher Page Nav -->
+            <script>
+                // Check if 'teacher' is in sessionStorage.getItem('groups')
+                let groups = sessionStorage.getItem("groups") || ""; // Ensure it's a string
+                if (!groups.includes("teachers")) {
+                    document.querySelector(".teacher-nav").style.display = "none"; // Hide the element
+                }
+            </script>
 
             <li class="nav-item">
                 <a class="nav-link collapsed" href="https://us-east-1yfkzkrdrk.auth.us-east-1.amazoncognito.com/login?client_id=6q9dfaem3aaobkec9fs0p2n07e&redirect_uri=https://studybuddy-website.s3.us-east-1.amazonaws.com/studybuddy/index.html&response_type=token">
