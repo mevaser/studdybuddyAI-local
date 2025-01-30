@@ -92,7 +92,6 @@
     if (tokens.id_token) {
       sessionStorage.setItem(`idToken_${userId}`, tokens.id_token);
       sessionStorage.setItem(`groups`, getUserGroupsFromToken(tokens.id_token));
-
     }
     if (tokens.access_token) {
       sessionStorage.setItem(`accessToken_${userId}`, tokens.access_token);
@@ -112,76 +111,74 @@
 
   function clearTokens(userId) {
     sessionStorage.removeItem(`idToken_${userId}`);
-    sessionStorage.removeItem('groups');
+    sessionStorage.removeItem("groups");
     sessionStorage.removeItem(`accessToken_${userId}`);
     sessionStorage.removeItem(`refreshToken_${userId}`);
   }
 
   // Runs when the page is fully loaded
-document.addEventListener("DOMContentLoaded", () => {
-  updateAuthButton();
-});
+  document.addEventListener("DOMContentLoaded", () => {
+    updateAuthButton();
+  });
 
-/**
-* updateAuthButton()
-* -------------------
-* This function updates the login/logout button based on the user's authentication state.
-* - If the user is logged in (valid token exists), the button changes to "Sign Out."
-* - If the user is logged out (no valid token), the button remains as "Login."
-* - Clicking the button will either log the user out (by clearing tokens) or redirect them to the login page.
-*/
-function updateAuthButton() {
-  // Select the authentication button from the DOM
-  const authButton = document.getElementById("authButton");
-  // Profile dropdown button
-  const signOutButton = document.getElementById("signOutButton");
-  // Retrieve the ID token from sessionStorage
-  const idToken = sessionStorage.getItem("idToken_defaultUser");
+  /**
+   * updateAuthButton()
+   * -------------------
+   * This function updates the login/logout button based on the user's authentication state.
+   * - If the user is logged in (valid token exists), the button changes to "Sign Out."
+   * - If the user is logged out (no valid token), the button remains as "Login."
+   * - Clicking the button will either log the user out (by clearing tokens) or redirect them to the login page.
+   */
+  function updateAuthButton() {
+    // Select the authentication button from the DOM
+    const authButton = document.getElementById("authButton");
+    // Profile dropdown button
+    const signOutButton = document.getElementById("signOutButton");
+    // Retrieve the ID token from sessionStorage
+    const idToken = sessionStorage.getItem("idToken_defaultUser");
 
-  // Ensure signOutButton is hidden by default
-  if (signOutButton) {
+    // Ensure signOutButton is hidden by default
+    if (signOutButton) {
       signOutButton.style.display = "none";
-  }
+    }
 
-  // Check if the user is logged in (valid token exists)
-  if (idToken && isTokenValid(idToken)) {
+    // Check if the user is logged in (valid token exists)
+    if (idToken && isTokenValid(idToken)) {
       // User is logged in -> Change button to "Sign Out"
       authButton.innerHTML = `<i class="bi bi-box-arrow-right"></i> <span>Sign Out</span>`;
 
       // Add an event listener for signing out
       authButton.onclick = () => {
-          clearTokens("defaultUser"); // Clear authentication tokens
-          updateAuthButton(); // Update button UI
-          window.location.reload(); // Refresh page to apply changes
+        clearTokens("defaultUser"); // Clear authentication tokens
+        updateAuthButton(); // Update button UI
+        window.location.reload(); // Refresh page to apply changes
       };
 
       // ✅ Show and enable profile dropdown "Sign Out" button
       if (signOutButton) {
-          signOutButton.style.display = "block"; // Make it visible
-          signOutButton.onclick = () => {
-              clearTokens("defaultUser"); // Clear authentication tokens
-              updateAuthButton(); // Update button UI
-              signOutButton.style.display = "none"; // Immediately hide after clicking
-              window.location.reload(); // Refresh page to apply changes
-          };
+        signOutButton.style.display = "block"; // Make it visible
+        signOutButton.onclick = () => {
+          clearTokens("defaultUser"); // Clear authentication tokens
+          updateAuthButton(); // Update button UI
+          signOutButton.style.display = "none"; // Immediately hide after clicking
+          window.location.reload(); // Refresh page to apply changes
+        };
       }
-  } else {
+    } else {
       // User is logged out -> Change button to "Login"
       authButton.innerHTML = `<i class="bi bi-box-arrow-in-right"></i> <span>Login</span>`;
 
       // Add an event listener for signing in
       authButton.onclick = () => {
-          redirectToCognito(); // Redirect user to Cognito sign-in page
+        redirectToCognito(); // Redirect user to Cognito sign-in page
       };
 
       // ✅ Ensure profile dropdown "Sign Out" button is hidden when logged out
       if (signOutButton) {
-          signOutButton.style.display = "none";
+        signOutButton.style.display = "none";
       }
+    }
   }
-}
-
-
 
   /*****************************************************
    * 3. UNIFIED LOGIN LOGIC
@@ -192,29 +189,64 @@ function updateAuthButton() {
       "https://us-east-1yfkzkrdrk.auth.us-east-1.amazoncognito.com/login/continue?client_id=6q9dfaem3aaobkec9fs0p2n07e&redirect_uri=https%3A%2F%2Fstudybuddy-website.s3.us-east-1.amazonaws.com%2Fstudybuddy%2Findex.html&response_type=token";
     console.warn("No valid token. Redirecting to sign-in...");
     window.location.href = cognitoSignInURL;
-  }
+}
 
-  function validateSessionAndRedirect(userId = "defaultUser") {
+function validateSessionAndRedirect(userId = "defaultUser") {
     const tokens = getTokensFromStorage(userId);
     if (!tokens.id_token || !isTokenValid(tokens.id_token)) {
       redirectToCognito();
     } else {
       console.log("User has a valid token.");
     }
-  }
+}
 
-  function handleOAuthLogin(userId = "defaultUser") {
+async function updateUserProfileAfterLogin(email, name) {
+    if (!email) {
+      console.error("❌ Missing email! Cannot update user profile.");
+      return; // Stop execution if no email
+    }
+
+    const apiUrl = "https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/updateProfileAfterFirstLogin";
+   
+    // ✅ Correct request format: Wrapping in an additional JSON object
+    const requestBody = JSON.stringify({body: JSON.stringify({ Email: email, Name: name })});
+
+    console.log(`📩 Sending update request for: Email=${email}, Name=${name}`);
+    console.log("📝 Request Body:", requestBody); // Debugging request payload
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": sessionStorage.getItem("idToken_defaultUser") || "" // If required
+        },
+        body: requestBody
+      });
+
+      const result = await response.json();
+      console.log("✅ User profile update response:", result);
+
+      if (response.ok) {
+        console.log("✅ User profile successfully updated in DynamoDB!");
+      } else {
+        console.warn("⚠ Failed to update user profile in DynamoDB:", result.error);
+      }
+    } catch (error) {
+      console.error("❌ Error updating user profile in DynamoDB:", error);
+    }
+}
+
+function handleOAuthLogin(userId = "defaultUser") {
     let tokens = getTokensFromStorage(userId);
+
     if (!tokens.id_token || !isTokenValid(tokens.id_token)) {
       const hashTokens = parseTokensFromHash();
+
       if (hashTokens.id_token && isTokenValid(hashTokens.id_token)) {
         console.log("Storing tokens from URL hash...");
         saveTokens(userId, hashTokens);
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname
-        );
+        window.history.replaceState({}, document.title, window.location.pathname);
         tokens = getTokensFromStorage(userId);
       } else {
         console.log("No valid token from hash or storage.");
@@ -230,19 +262,22 @@ function updateAuthButton() {
       const decodedToken = parseJwt(idToken);
       console.log("Decoded Token:", decodedToken);
 
-      // Extract and log the user ID (sub)
-      const userId = decodedToken?.sub || "Unknown User ID";
-      console.log("🔑 User ID (sub):", userId);
+      const userEmail = decodedToken?.email;
+      const userName = decodedToken?.name || "Unknown User";
 
-      // Extract and log the user group (if exists)
-      const userGroups = decodedToken["cognito:groups"] || "No group assigned";
-      console.log("👥 User Group:", userGroups);
+      if (userEmail) {
+        console.log("📩 Fetching user profile from DynamoDB...");
+        loadProfileFromDynamo(userEmail);
+        updateUserProfileAfterLogin(userEmail, userName);
+      } else {
+        console.warn("⚠ User email not found in token.");
+      }
     } else {
       console.warn("No ID Token found in sessionStorage.");
     }
-  }
+}
 
-  async function handleFormLogin(event) {
+async function handleFormLogin(event) {
     event.preventDefault();
     const userId = "defaultUser";
     const emailInput = document.getElementById("yourUsername");
@@ -263,15 +298,11 @@ function updateAuthButton() {
       loginButton.disabled = true;
     }
     try {
-      // Example call to a custom endpoint
-      const response = await fetch(
-        "https://kzgutwddhk.execute-api.us-east-1.amazonaws.com/askQuestion",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        }
-      );
+      const response = await fetch("https://kzgutwddhk.execute-api.us-east-1.amazonaws.com/askQuestion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
       const result = await response.json();
       if (response.ok && result.tokens && result.tokens.id_token) {
         console.log("Login successful, saving tokens...");
@@ -289,9 +320,9 @@ function updateAuthButton() {
         loginButton.disabled = false;
       }
     }
-  }
+}
 
-  function handleLoginFlow() {
+function handleLoginFlow() {
     handleOAuthLogin("defaultUser");
     const loginForm = document.getElementById("loginForm");
     if (loginForm) {
@@ -301,7 +332,8 @@ function updateAuthButton() {
     if (isProtectedPage) {
       validateSessionAndRedirect("defaultUser");
     }
-  }
+}
+
 
   /*****************************************************
    * 4. DYNAMO DATA FETCH (STUDENT PROFILE)
@@ -430,7 +462,6 @@ function updateAuthButton() {
       updateUserNameOnPage();
     }
   });
-
 
   /*****************************************************
    * 6. REMAINING UI / EDITOR / CHART LOGIC
@@ -739,8 +770,7 @@ function updateAuthButton() {
 
       const updatedName = document.getElementById("fullName")?.value.trim();
       const updatedBio = document.getElementById("about")?.value.trim();
-      const updatedPhone = document.getElementById("Phone")?.value.trim();
-      const updatedEmail = document.getElementById("Email")?.value.trim();
+      const updatedPhone = document.getElementById("phone")?.value.trim();
       const updatedLinkedin = document.getElementById("Linkedin")?.value.trim();
 
       if (!updatedEmail) {
@@ -810,6 +840,6 @@ function updateAuthButton() {
     if (!idToken) return null;
     const decodedToken = parseJwt(idToken);
     const userGroups = decodedToken["cognito:groups"] || null;
-    return userGroups
+    return userGroups;
   }
 })();
