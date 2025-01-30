@@ -189,27 +189,30 @@
       "https://us-east-1yfkzkrdrk.auth.us-east-1.amazoncognito.com/login/continue?client_id=6q9dfaem3aaobkec9fs0p2n07e&redirect_uri=https%3A%2F%2Fstudybuddy-website.s3.us-east-1.amazonaws.com%2Fstudybuddy%2Findex.html&response_type=token";
     console.warn("No valid token. Redirecting to sign-in...");
     window.location.href = cognitoSignInURL;
-}
+  }
 
-function validateSessionAndRedirect(userId = "defaultUser") {
+  function validateSessionAndRedirect(userId = "defaultUser") {
     const tokens = getTokensFromStorage(userId);
     if (!tokens.id_token || !isTokenValid(tokens.id_token)) {
       redirectToCognito();
     } else {
       console.log("User has a valid token.");
     }
-}
+  }
 
-async function updateUserProfileAfterLogin(email, name) {
+  async function updateUserProfileAfterLogin(email, name) {
     if (!email) {
       console.error("❌ Missing email! Cannot update user profile.");
       return; // Stop execution if no email
     }
 
-    const apiUrl = "https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/updateProfileAfterFirstLogin";
-   
+    const apiUrl =
+      "https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/updateProfileAfterFirstLogin";
+
     // ✅ Correct request format: Wrapping in an additional JSON object
-    const requestBody = JSON.stringify({body: JSON.stringify({ Email: email, Name: name })});
+    const requestBody = JSON.stringify({
+      body: JSON.stringify({ Email: email, Name: name }),
+    });
 
     console.log(`📩 Sending update request for: Email=${email}, Name=${name}`);
     console.log("📝 Request Body:", requestBody); // Debugging request payload
@@ -221,7 +224,7 @@ async function updateUserProfileAfterLogin(email, name) {
           "Content-Type": "application/json",
           //"Authorization": sessionStorage.getItem("idToken_defaultUser") || "" // If required
         },
-        body: requestBody
+        body: requestBody,
       });
 
       const result = await response.json();
@@ -230,54 +233,64 @@ async function updateUserProfileAfterLogin(email, name) {
       if (response.ok) {
         console.log("✅ User profile successfully updated in DynamoDB!");
       } else {
-        console.warn("⚠ Failed to update user profile in DynamoDB:", result.error);
+        console.warn(
+          "⚠ Failed to update user profile in DynamoDB:",
+          result.error
+        );
       }
     } catch (error) {
       console.error("❌ Error updating user profile in DynamoDB:", error);
     }
-}
+  }
 
-function handleOAuthLogin(userId = "defaultUser") {
+  function handleOAuthLogin(userId = "defaultUser") {
     let tokens = getTokensFromStorage(userId);
 
     if (!tokens.id_token || !isTokenValid(tokens.id_token)) {
       const hashTokens = parseTokensFromHash();
 
       if (hashTokens.id_token && isTokenValid(hashTokens.id_token)) {
-        console.log("Storing tokens from URL hash...");
+        console.log("✅ Storing tokens from URL hash...");
         saveTokens(userId, hashTokens);
-        window.history.replaceState({}, document.title, window.location.pathname);
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
         tokens = getTokensFromStorage(userId);
       } else {
-        console.log("No valid token from hash or storage.");
+        console.log("⚠ No valid token from hash or storage.");
       }
     } else {
-      console.log("Valid token already in sessionStorage.");
+      console.log("✅ Valid token already in sessionStorage.");
     }
 
     //CHECK OF SUB AND USER GROUP
-    // 🔹 LOG USER ID (sub) & GROUP AT THE END
-    const idToken = sessionStorage.getItem("idToken_defaultUser");
-    if (idToken) {
-      const decodedToken = parseJwt(idToken);
-      console.log("Decoded Token:", decodedToken);
+    setTimeout(() => {
+      const idToken = sessionStorage.getItem("idToken_defaultUser");
+      if (idToken) {
+        console.log("🔄 Updating UI after token storage...");
+        updateAuthButton(); // 🔹 Update button AFTER tokens are stored
+        const decodedToken = parseJwt(idToken);
+        console.log("Decoded Token:", decodedToken);
 
-      const userEmail = decodedToken?.email;
-      const userName = decodedToken?.name || "Unknown User";
+        const userEmail = decodedToken?.email;
+        const userName = decodedToken?.name || "Unknown User";
 
-      if (userEmail) {
-        console.log("📩 Fetching user profile from DynamoDB...");
-        loadProfileFromDynamo(userEmail);
-        updateUserProfileAfterLogin(userEmail, userName);
+        if (userEmail) {
+          console.log("📩 Fetching user profile from DynamoDB...");
+          loadProfileFromDynamo(userEmail);
+          updateUserProfileAfterLogin(userEmail, userName);
+        } else {
+          console.warn("⚠ User email not found in token.");
+        }
       } else {
-        console.warn("⚠ User email not found in token.");
+        console.warn("⚠ No ID Token found in sessionStorage.");
       }
-    } else {
-      console.warn("No ID Token found in sessionStorage.");
-    }
-}
+    }, 300); // Small delay ensures token is stored first
+  }
 
-async function handleFormLogin(event) {
+  async function handleFormLogin(event) {
     event.preventDefault();
     const userId = "defaultUser";
     const emailInput = document.getElementById("yourUsername");
@@ -298,11 +311,14 @@ async function handleFormLogin(event) {
       loginButton.disabled = true;
     }
     try {
-      const response = await fetch("https://kzgutwddhk.execute-api.us-east-1.amazonaws.com/askQuestion", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await fetch(
+        "https://kzgutwddhk.execute-api.us-east-1.amazonaws.com/askQuestion",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
       const result = await response.json();
       if (response.ok && result.tokens && result.tokens.id_token) {
         console.log("Login successful, saving tokens...");
@@ -320,9 +336,9 @@ async function handleFormLogin(event) {
         loginButton.disabled = false;
       }
     }
-}
+  }
 
-function handleLoginFlow() {
+  function handleLoginFlow() {
     handleOAuthLogin("defaultUser");
     const loginForm = document.getElementById("loginForm");
     if (loginForm) {
@@ -332,8 +348,7 @@ function handleLoginFlow() {
     if (isProtectedPage) {
       validateSessionAndRedirect("defaultUser");
     }
-}
-
+  }
 
   /*****************************************************
    * 4. DYNAMO DATA FETCH (STUDENT PROFILE)
@@ -443,6 +458,7 @@ function handleLoginFlow() {
 
   document.addEventListener("DOMContentLoaded", () => {
     handleLoginFlow();
+    setTimeout(updateAuthButton, 300); // 🔹 Small delay to ensure sessionStorage is ready
 
     // If we are on the profile overview page, we check #profile-overview
     const profilePage = !!document.querySelector("#profile-overview");
