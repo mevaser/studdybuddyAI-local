@@ -684,6 +684,71 @@
     }
   }
 
+  // -- Chat access
+  async function checkBioBeforeChat() {
+    const idToken = sessionStorage.getItem("idToken_defaultUser");
+    if (!idToken || !isTokenValid(idToken)) {
+      alert("⚠ You must be logged in to access the chat.");
+      redirectToCognito();
+      return;
+    }
+
+    // 1️⃣ Try getting Bio from sessionStorage first
+    const userData = sessionStorage.getItem("userData");
+    if (userData) {
+      const parsedData = JSON.parse(userData);
+      if (parsedData.Bio && parsedData.Bio.trim() !== "") {
+        window.location.assign("pages-chat.html"); // Allow chat access
+        return;
+      }
+    }
+
+    // 2️⃣ If no Bio in sessionStorage, call the Lambda API
+    try {
+      console.log("🔍 Checking profile from API...");
+
+      const decodedToken = parseJwt(idToken);
+      const userEmail = decodedToken?.email;
+      if (!userEmail) {
+        alert("⚠ Email not found in token.");
+        return;
+      }
+
+      const apiUrl = `https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/checkProfile?email=${encodeURIComponent(
+        userEmail
+      )}`;
+      const response = await fetch(apiUrl, { method: "GET" });
+
+      if (!response.ok) throw new Error("Failed to check profile.");
+
+      const result = await response.json();
+      const responseBody = JSON.parse(result.body);
+
+      if (responseBody.missing_fields?.includes("Bio")) {
+        alert("⚠ You must add a Bio before accessing the chat.");
+        window.location.assign("users-profile.html"); // Redirect to profile update page
+      } else {
+        console.log("✅ Bio is set, allowing access.");
+        window.location.assign("pages-chat.html"); // Allow chat access
+      }
+    } catch (error) {
+      console.error("❌ Error checking profile:", error);
+      alert("An error occurred while checking your profile.");
+    }
+  }
+
+  // Attach event listener to chat button
+  document.addEventListener("DOMContentLoaded", () => {
+    const chatLink = document.querySelector('a[href="pages-chat.html"]');
+    if (chatLink) {
+      chatLink.addEventListener("click", (event) => {
+        event.preventDefault();
+        checkBioBeforeChat();
+      });
+    }
+  });
+
+
   // -- Chat Handling
   document.addEventListener("DOMContentLoaded", () => {
     const chatWindow = document.getElementById("chat-window");
@@ -789,11 +854,6 @@
       const updatedPhone = document.getElementById("phone")?.value.trim();
       const updatedLinkedin = document.getElementById("Linkedin")?.value.trim();
 
-      if (!updatedEmail) {
-        alert("Email is required.");
-        return;
-      }
-
       const idToken = sessionStorage.getItem("idToken_defaultUser");
       if (!idToken || !isTokenValid(idToken)) {
         alert("User is not authenticated or token is invalid/expired.");
@@ -801,7 +861,7 @@
       }
 
       const decodedToken = parseJwt(idToken);
-      const userEmail = (decodedToken && decodedToken.email) || updatedEmail;
+      const userEmail = decodedToken && decodedToken.email;
       console.log("Updating profile for", userEmail);
 
       try {
