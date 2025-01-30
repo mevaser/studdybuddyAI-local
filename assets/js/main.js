@@ -117,6 +117,72 @@
     sessionStorage.removeItem(`refreshToken_${userId}`);
   }
 
+  // Runs when the page is fully loaded
+document.addEventListener("DOMContentLoaded", () => {
+  updateAuthButton();
+});
+
+/**
+* updateAuthButton()
+* -------------------
+* This function updates the login/logout button based on the user's authentication state.
+* - If the user is logged in (valid token exists), the button changes to "Sign Out."
+* - If the user is logged out (no valid token), the button remains as "Login."
+* - Clicking the button will either log the user out (by clearing tokens) or redirect them to the login page.
+*/
+function updateAuthButton() {
+  // Select the authentication button from the DOM
+  const authButton = document.getElementById("authButton");
+  // Profile dropdown button
+  const signOutButton = document.getElementById("signOutButton");
+  // Retrieve the ID token from sessionStorage
+  const idToken = sessionStorage.getItem("idToken_defaultUser");
+
+  // Ensure signOutButton is hidden by default
+  if (signOutButton) {
+      signOutButton.style.display = "none";
+  }
+
+  // Check if the user is logged in (valid token exists)
+  if (idToken && isTokenValid(idToken)) {
+      // User is logged in -> Change button to "Sign Out"
+      authButton.innerHTML = `<i class="bi bi-box-arrow-right"></i> <span>Sign Out</span>`;
+
+      // Add an event listener for signing out
+      authButton.onclick = () => {
+          clearTokens("defaultUser"); // Clear authentication tokens
+          updateAuthButton(); // Update button UI
+          window.location.reload(); // Refresh page to apply changes
+      };
+
+      // ✅ Show and enable profile dropdown "Sign Out" button
+      if (signOutButton) {
+          signOutButton.style.display = "block"; // Make it visible
+          signOutButton.onclick = () => {
+              clearTokens("defaultUser"); // Clear authentication tokens
+              updateAuthButton(); // Update button UI
+              signOutButton.style.display = "none"; // Immediately hide after clicking
+              window.location.reload(); // Refresh page to apply changes
+          };
+      }
+  } else {
+      // User is logged out -> Change button to "Login"
+      authButton.innerHTML = `<i class="bi bi-box-arrow-in-right"></i> <span>Login</span>`;
+
+      // Add an event listener for signing in
+      authButton.onclick = () => {
+          redirectToCognito(); // Redirect user to Cognito sign-in page
+      };
+
+      // ✅ Ensure profile dropdown "Sign Out" button is hidden when logged out
+      if (signOutButton) {
+          signOutButton.style.display = "none";
+      }
+  }
+}
+
+
+
   /*****************************************************
    * 3. UNIFIED LOGIN LOGIC
    *****************************************************/
