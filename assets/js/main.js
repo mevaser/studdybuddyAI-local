@@ -219,7 +219,7 @@ async function updateUserProfileAfterLogin(email, name) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": sessionStorage.getItem("idToken_defaultUser") || "" // If required
+          //"Authorization": sessionStorage.getItem("idToken_defaultUser") || "" // If required
         },
         body: requestBody
       });
