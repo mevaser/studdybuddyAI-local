@@ -909,59 +909,67 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // -- Profile Update
-  const saveChangesBtn = document.getElementById("saveChangesBtn");
-  if (saveChangesBtn) {
-    saveChangesBtn.addEventListener("click", async (event) => {
-      event.preventDefault();
-      console.log("Save Changes button clicked");
+  // -- Profile Update
+const saveChangesBtn = document.getElementById("saveChangesBtn");
+if (saveChangesBtn) {
+  saveChangesBtn.addEventListener("click", async (event) => {
+    event.preventDefault();
+    console.log("Save Changes button clicked");
 
-      const updatedName = document.getElementById("fullName")?.value.trim();
-      const updatedBio = document.getElementById("about")?.value.trim();
-      const updatedPhone = document.getElementById("phone")?.value.trim();
-      const updatedLinkedin = document.getElementById("Linkedin")?.value.trim();
+    const updatedName = document.getElementById("fullName")?.value.trim();
+    const updatedBio = document.getElementById("about")?.value.trim();
+    const updatedPhone = document.getElementById("phone")?.value.trim();
+    const updatedLinkedin = document.getElementById("Linkedin")?.value.trim();
 
-      const idToken = sessionStorage.getItem("idToken_defaultUser");
-      if (!idToken || !isTokenValid(idToken)) {
-        alert("User is not authenticated or token is invalid/expired.");
-        return;
+    const idToken = sessionStorage.getItem("idToken_defaultUser");
+    if (!idToken || !isTokenValid(idToken)) {
+      alert("User is not authenticated or token is invalid/expired.");
+      return;
+    }
+
+    const decodedToken = parseJwt(idToken);
+    const userEmail = decodedToken?.email;
+    console.log("Updating profile for", userEmail);
+
+    try {
+      const apiUrl =
+        "https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/updateProfile";
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: idToken,
+        },
+        body: JSON.stringify({
+          Email: userEmail,
+          Name: updatedName,
+          Bio: updatedBio,
+          phone: updatedPhone,
+          linkedin: updatedLinkedin,
+        }),
+      });
+
+      const result = await response.json();
+      console.log("Profile update response:", result);
+
+      if (response.ok) {
+        alert("Profile updated successfully!");
+
+        // ✅ Fetch updated user data and refresh sessionStorage
+        await loadProfileFromDynamo(userEmail);
+
+        // ✅ Ensure UI updates with the latest session data
+        updateUserNameOnPage();
+      } else {
+        alert(`Failed to update profile: ${result.error || "Unknown error"}`);
       }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("An error occurred while updating the profile.");
+    }
+  });
+}
 
-      const decodedToken = parseJwt(idToken);
-      const userEmail = decodedToken && decodedToken.email;
-      console.log("Updating profile for", userEmail);
-
-      try {
-        const apiUrl =
-          "https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/updateProfile";
-        const response = await fetch(apiUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: idToken,
-          },
-          body: JSON.stringify({
-            Email: userEmail,
-            Name: updatedName,
-            Bio: updatedBio,
-            phone: updatedPhone,
-            linkedin: updatedLinkedin,
-          }),
-        });
-
-        const result = await response.json();
-        console.log("Profile update response:", result);
-
-        if (response.ok) {
-          alert("Profile updated successfully!");
-        } else {
-          alert(`Failed to update profile: ${result.error || "Unknown error"}`);
-        }
-      } catch (error) {
-        console.error("Error updating profile:", error);
-        alert("An error occurred while updating the profile.");
-      }
-    });
-  }
 
   // -- ECharts auto-resize
   document.addEventListener("DOMContentLoaded", () => {
