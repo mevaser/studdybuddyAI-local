@@ -109,11 +109,16 @@
     };
   }
 
+  /**
+   * Clears session storage and authentication tokens.
+   */
   function clearTokens(userId) {
     sessionStorage.removeItem(`idToken_${userId}`);
     sessionStorage.removeItem("groups");
     sessionStorage.removeItem(`accessToken_${userId}`);
     sessionStorage.removeItem(`refreshToken_${userId}`);
+    sessionStorage.removeItem("userData");
+    sessionStorage.clear(); // Ensures full session reset
   }
 
   // Runs when the page is fully loaded
@@ -124,61 +129,123 @@
   /**
    * updateAuthButton()
    * -------------------
-   * This function updates the login/logout button based on the user's authentication state.
-   * - If the user is logged in (valid token exists), the button changes to "Sign Out."
-   * - If the user is logged out (no valid token), the button remains as "Login."
-   * - Clicking the button will either log the user out (by clearing tokens) or redirect them to the login page.
+   * This function updates the authentication buttons based on the user's login state.
+   * - If the user is logged in, buttons will change to "Sign Out."
+   * - If the user is logged out, buttons will display "Login."
+   * - Clicking "Sign Out" will clear sessionStorage and reload the page.
    */
   function updateAuthButton() {
-    // Select the authentication button from the DOM
-    const authButton = document.getElementById("authButton");
-    // Profile dropdown button
-    const signOutButton = document.getElementById("signOutButton");
+    // Select both authentication buttons
+    const authButton = document.getElementById("authButton"); // Sidebar button
+    const signOutButton = document.getElementById("signOutButton"); // Dropdown button
+
+    console.log("🔍 Debugging updateAuthButton...");
+    console.log("Found Buttons:", { authButton, signOutButton });
+
     // Retrieve the ID token from sessionStorage
     const idToken = sessionStorage.getItem("idToken_defaultUser");
+    console.log("🔑 Token Found:", idToken);
 
-    // Ensure signOutButton is hidden by default
-    if (signOutButton) {
-      signOutButton.style.display = "none";
-    }
-
-    // Check if the user is logged in (valid token exists)
     if (idToken && isTokenValid(idToken)) {
-      // User is logged in -> Change button to "Sign Out"
-      authButton.innerHTML = `<i class="bi bi-box-arrow-right"></i> <span>Sign Out</span>`;
+        console.log("✅ User is logged in. Updating buttons to 'Sign Out'...");
 
-      // Add an event listener for signing out
-      authButton.onclick = () => {
-        clearTokens("defaultUser"); // Clear authentication tokens
-        updateAuthButton(); // Update button UI
-        window.location.reload(); // Refresh page to apply changes
-      };
+        if (authButton) {
+            authButton.innerHTML = `<i class="bi bi-box-arrow-right"></i> <span>Sign Out</span>`;
+            authButton.onclick = handleSignOut;
+            authButton.style.display = "block";
+        }
 
-      // ✅ Show and enable profile dropdown "Sign Out" button
-      if (signOutButton) {
-        signOutButton.style.display = "block"; // Make it visible
-        signOutButton.onclick = () => {
-          clearTokens("defaultUser"); // Clear authentication tokens
-          updateAuthButton(); // Update button UI
-          signOutButton.style.display = "none"; // Immediately hide after clicking
-          window.location.reload(); // Refresh page to apply changes
-        };
-      }
+        if (signOutButton) {
+            signOutButton.innerHTML = `<i class="bi bi-box-arrow-right"></i> <span>Sign Out</span>`;
+            signOutButton.onclick = handleSignOut;
+            signOutButton.style.display = "block"; // Show dropdown button
+        }
     } else {
-      // User is logged out -> Change button to "Login"
-      authButton.innerHTML = `<i class="bi bi-box-arrow-in-right"></i> <span>Login</span>`;
+        console.log("❌ User is logged out. Updating buttons to 'Login'...");
 
-      // Add an event listener for signing in
-      authButton.onclick = () => {
-        redirectToCognito(); // Redirect user to Cognito sign-in page
-      };
+        if (authButton) {
+            authButton.innerHTML = `<i class="bi bi-box-arrow-in-right"></i> <span>Login</span>`;
+            authButton.onclick = redirectToCognito;
+        }
 
-      // ✅ Ensure profile dropdown "Sign Out" button is hidden when logged out
-      if (signOutButton) {
-        signOutButton.style.display = "none";
-      }
+        if (signOutButton) {
+            signOutButton.innerHTML = `<i class="bi bi-box-arrow-in-right"></i> <span>Login</span>`;
+            signOutButton.onclick = redirectToCognito;
+            signOutButton.style.display = "none"; // Hide dropdown when logged out
+        }
     }
-  }
+}
+
+// Ensures the dropdown button is updated when the dropdown is opened
+function ensureSignOutButtonExists() {
+    let signOutButton = document.getElementById("signOutButton");
+
+    if (signOutButton) {
+        console.log("✅ signOutButton found! Updating auth buttons...");
+        updateAuthButton(); // Run update once found
+    }
+}
+
+// Attach event listener to profile dropdown (only run when clicked)
+document.addEventListener("DOMContentLoaded", () => {
+    updateAuthButton(); // Run initial check
+
+    const profileDropdown = document.querySelector(".nav-profile");
+    if (profileDropdown) {
+        profileDropdown.addEventListener("click", () => {
+            console.log("🔄 Profile dropdown opened - checking signOutButton...");
+            ensureSignOutButtonExists();
+        });
+    }
+});
+
+// ✅ Handles User Logout
+function handleSignOut() {
+    clearTokens("defaultUser");
+    updateAuthButton();
+    window.location.reload();
+}
+
+// Redirect to Cognito Login Page
+function redirectToCognito() {
+    const cognitoSignInURL =
+        "https://us-east-1yfkzkrdrk.auth.us-east-1.amazoncognito.com/login?client_id=6q9dfaem3aaobkec9fs0p2n07e&redirect_uri=https://studybuddy-website.s3.us-east-1.amazonaws.com/studybuddy/index.html&response_type=token";
+    console.warn("No valid token. Redirecting to sign-in...");
+    window.location.href = cognitoSignInURL;
+}
+
+// Validate Token Expiry
+function isTokenValid(idToken) {
+    const payload = parseJwt(idToken);
+    if (!payload || !payload.exp) return false;
+    return Date.now() < payload.exp * 1000;
+}
+
+// Utility: Parse JWT Token
+function parseJwt(token) {
+    if (!token) return null;
+    const base64Url = token.split(".")[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    try {
+        const jsonPayload = decodeURIComponent(
+            atob(base64)
+                .split("")
+                .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                .join("")
+        );
+        return JSON.parse(jsonPayload);
+    } catch (error) {
+        console.error("Error parsing token:", error);
+        return null;
+    }
+}
+
+// Run on Page Load
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => updateAuthButton(), 200); // Initial delay to allow token storage
+});
+
 
   /*****************************************************
    * 3. UNIFIED LOGIN LOGIC
@@ -748,7 +815,6 @@
     }
   });
 
-
   // -- Chat Handling
   document.addEventListener("DOMContentLoaded", () => {
     const chatWindow = document.getElementById("chat-window");
@@ -919,3 +985,43 @@
     return userGroups;
   }
 })();
+
+/********************************************************************
+ * 📝 POPULATE PROFILE EDIT FORM FROM SESSION STORAGE
+ * - Retrieves user data from sessionStorage
+ * - Fills in the profile edit form with saved user details
+ * - Makes the email field read-only to prevent changes
+ ********************************************************************/
+
+document.addEventListener("DOMContentLoaded", () => {
+  const userData = JSON.parse(sessionStorage.getItem("userData"));
+
+  if (userData) {
+    console.log("✅ Populating profile form with:", userData);
+
+    // Populate Name
+    const nameInput = document.getElementById("fullName");
+    if (nameInput) nameInput.value = userData.Name || "";
+
+    // Populate Bio (About Section)
+    const bioInput = document.getElementById("about");
+    if (bioInput) bioInput.value = userData.Bio || "";
+
+    // Populate Phone
+    const phoneInput = document.getElementById("Phone");
+    if (phoneInput) phoneInput.value = userData.phone || "";
+
+    // Populate Email and make it read-only
+    const emailInput = document.getElementById("Email");
+    if (emailInput) {
+      emailInput.value = userData.Email || "";
+      emailInput.setAttribute("readonly", true); // 🔒 Make email non-editable
+    }
+
+    // Populate LinkedIn
+    const linkedinInput = document.getElementById("Linkedin");
+    if (linkedinInput) linkedinInput.value = userData["linkedin profile"] || "";
+  } else {
+    console.warn("⚠ No user data found in sessionStorage.");
+  }
+});
