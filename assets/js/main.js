@@ -1016,8 +1016,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (bioInput) bioInput.value = userData.Bio || "";
 
     // Populate Phone
-    const phoneInput = document.getElementById("Phone");
-    if (phoneInput) phoneInput.value = userData.phone || "";
+    const phoneInput = document.getElementById("phone");
+    if (phoneInput) {
+      phoneInput.value = userData.phone || "";
+      console.log("phoneInput found:", phoneInput);
+      console.log("Setting phone to:", userData.phone || "");
+      console.log("Resulting input value:", phoneInput.value);
+    } else {
+      console.error("Could not find #phone input in the DOM!");
+    }
+
 
     // Populate Email and make it read-only
     const emailInput = document.getElementById("Email");
