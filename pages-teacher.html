@@ -1,275 +1,308 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-<meta charset="utf-8">
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
 
     <title>Teacher Dashboard - StudyBuddy</title>
-    <meta content="" name="description">
-    <meta content="" name="keywords">
+    <meta content="" name="description" />
+    <meta content="" name="keywords" />
 
     <!-- Favicons -->
-    <link href="assets/img/favicon.png" rel="icon">
-    <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+    <link href="assets/img/favicon.png" rel="icon" />
+    <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon" />
 
     <!-- Google Fonts -->
-    <link href="https://fonts.gstatic.com" rel="preconnect">
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+    <link href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+      rel="stylesheet"
+    />
 
     <!-- Vendor CSS Files -->
-    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-    <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
-    <link href="assets/vendor/quill/quill.snow.css" rel="stylesheet">
-    <link href="assets/vendor/quill/quill.bubble.css" rel="stylesheet">
-    <link href="assets/vendor/remixicon/remixicon.css" rel="stylesheet">
-    <link href="assets/vendor/simple-datatables/style.css" rel="stylesheet">
+    <link
+      href="assets/vendor/bootstrap/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="assets/vendor/bootstrap-icons/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet" />
+    <link href="assets/vendor/quill/quill.snow.css" rel="stylesheet" />
+    <link href="assets/vendor/quill/quill.bubble.css" rel="stylesheet" />
+    <link href="assets/vendor/remixicon/remixicon.css" rel="stylesheet" />
+    <link href="assets/vendor/simple-datatables/style.css" rel="stylesheet" />
 
     <!-- Template Main CSS File -->
-    <link href="assets/css/style.css" rel="stylesheet">
+    <link href="assets/css/style.css" rel="stylesheet" />
+  </head>
 
-    <!-- =======================================================
-</head>
-
-<body>
-
+  <body>
     <!-- ======= Header ======= -->
     <header id="header" class="header fixed-top d-flex align-items-center">
       <div class="d-flex align-items-center justify-content-between">
-          <a href="index.html" class="logo d-flex align-items-center">
-              <img src="https://studybuddy-website.s3.us-east-1.amazonaws.com/studybuddy/assets/img/logo.png" alt="Logo">
-              <span class="d-none d-lg-block">StudyBuddy</span>
-          </a>
-          <i class="bi bi-list toggle-sidebar-btn"></i>
-      </div><!-- End Logo -->
-      
-      <div class="search-bar">
-          <form class="search-form d-flex align-items-center" method="POST" action="#">
-              <input type="text" name="query" placeholder="Search" title="Enter search keyword">
-              <button type="submit" title="Search"><i class="bi bi-search"></i></button>
-          </form>
-      </div><!-- End Search Bar -->
-      
+        <a href="index.html" class="logo d-flex align-items-center">
+          <img
+            src="https://studybuddy-website.s3.us-east-1.amazonaws.com/studybuddy/assets/img/logo.png"
+            alt="Logo"
+          />
+          <span class="d-none d-lg-block">StudyBuddy</span>
+        </a>
+        <i class="bi bi-list toggle-sidebar-btn"></i>
+      </div>
+      <!-- End Logo -->
+
       <nav class="header-nav ms-auto">
-          <ul class="d-flex align-items-center">
-              <li class="nav-item d-block d-lg-none">
-                  <a class="nav-link nav-icon search-bar-toggle" href="#">
-                      <i class="bi bi-search"></i>
-                  </a>
-              </li><!-- End Search Icon -->
-              
-              <li class="nav-item dropdown pe-3">
+        <ul class="d-flex align-items-center">
+          <li class="nav-item dropdown pe-3">
+            <a
+              class="nav-link nav-profile d-flex align-items-center pe-0 show"
+              href="#"
+              data-bs-toggle="dropdown"
+              aria-expanded="true"
+            >
+              <img
+                src="assets/img/profile-img.jpg"
+                alt="Profile"
+                class="rounded-circle"
+              />
+              <span class="d-none d-md-block dropdown-toggle ps-2"></span> </a
+            ><!-- End Profile Iamge Icon -->
 
-                <a class="nav-link nav-profile d-flex align-items-center pe-0 show" href="#" data-bs-toggle="dropdown" aria-expanded="true">
-                    <img src="assets/img/profile-img.jpg" alt="Profile" class="rounded-circle">
-                    <span class="d-none d-md-block dropdown-toggle ps-2"></span>
-                </a><!-- End Profile Iamge Icon -->
+            <ul
+              class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile show"
+              style="
+                position: absolute;
+                inset: 0px 0px auto auto;
+                margin: 0px;
+                transform: translate3d(-15.4286px, 37.7143px, 0px);
+              "
+              data-popper-placement="bottom-end"
+            >
+              <li class="dropdown-header">
+                <h6 id="fullname" class="user-name">Guest</h6>
+              </li>
+              <li>
+                <hr class="dropdown-divider" />
+              </li>
 
-                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile show" style="position: absolute; inset: 0px 0px auto auto; margin: 0px; transform: translate3d(-15.4286px, 37.7143px, 0px);" data-popper-placement="bottom-end">
-                    <li class="dropdown-header">
-                        <h6 id="fullname" class="user-name">Guest</h6>
+              <li>
+                <a
+                  class="dropdown-item d-flex align-items-center"
+                  href="users-profile.html"
+                >
+                  <i class="bi bi-person"></i>
+                  <span>My Profile</span>
+                </a>
+              </li>
+              <li>
+                <hr class="dropdown-divider" />
+              </li>
 
-                    </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
+              <li>
+                <hr class="dropdown-divider" />
+              </li>
+              <li>
+                <hr class="dropdown-divider" />
+              </li>
 
-                    <li>
-                        <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
-                            <i class="bi bi-person"></i>
-                            <span>My Profile</span>
-                        </a>
-                    </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-
-                    <li>
-                        <a id="signOutButton" class="dropdown-item d-flex align-items-center" href="#" style="display: none;"><i class="bi bi-box-arrow-in-right"></i> <span>Login</span></a>
-                    </li>
-
-                </ul><!-- End Profile Dropdown Items -->
-            </li>
-          </ul>
-      </nav><!-- End Icons Navigation -->
-  </header><!-- End Header -->
-  
-
-  <!-- ======= Sidebar ======= -->
-  <aside id="sidebar" class="sidebar">
-
-    <ul class="sidebar-nav" id="sidebar-nav">
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="index.html">
-          <i class="bi bi-grid"></i>
-          <span>Dashboard</span>
-        </a>
-      </li><!-- End Dashboard Nav -->
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="users-profile.html">
-          <i class="bi bi-person"></i>
-          <span>Profile</span>
-        </a>
-      </li><!-- End Profile Page Nav -->
-
-      <li class="nav-item">
-        <a class="nav-link" href="pages-chat.html">
-          <i class="bi bi-envelope"></i>
-          <span>Chat</span>
-        </a>
-      </li><!-- End Chat Page Nav -->
-
-      <li class="nav-item">
-        <a class="nav-link" href="pages-teacher.html">
-          <i class="bi bi-envelope"></i>
-          <span>Teacher</span>
-        </a>
-      </li><!-- End Teacher Page Nav -->
-
-      <li class="nav-item">
-        <a id="authButton" class="nav-link collapsed" href="https://us-east-1yfkzkrdrk.auth.us-east-1.amazoncognito.com/login?client_id=6q9dfaem3aaobkec9fs0p2n07e&redirect_uri=https://studybuddy-website.s3.us-east-1.amazonaws.com/studybuddy/index.html&response_type=token">
-          <i class="bi bi-box-arrow-right"></i>
-          <span>Login</span>
-        </a>
-      </li><!-- End Login Page Nav -->
-
-    </ul>
-
-  </aside><!-- End Sidebar-->
-
-  <!-- ======= Main Content ======= -->
-  <main id="main" class="main">
-
-    <div class="pagetitle">
-      <h1>Teacher Dashboard</h1>
-      <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-          <li class="breadcrumb-item active">Teacher Dashboard</li>
-        </ol>
+              <li>
+                <a
+                  id="signOutButton"
+                  class="dropdown-item d-flex align-items-center"
+                  href="#"
+                  style="display: none"
+                  ><i class="bi bi-box-arrow-in-right"></i>
+                  <span>Login</span></a
+                >
+              </li>
+            </ul>
+            <!-- End Profile Dropdown Items -->
+          </li>
+        </ul>
       </nav>
-    </div><!-- End Page Title -->
+      <!-- End Icons Navigation -->
+    </header>
+    <!-- End Header -->
 
-    <section class="section dashboard">
-      <div class="row">
+    <!-- ======= Sidebar ======= -->
+    <aside id="sidebar" class="sidebar">
+      <ul class="sidebar-nav" id="sidebar-nav">
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="index.html">
+            <i class="bi bi-grid"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <!-- End Dashboard Nav -->
 
-        <!-- Students Count Card -->
-        <div class="col-lg-4 col-md-6">
-          <div class="card info-card">
-            <div class="card-body">
-              <h5 class="card-title">Students <span>| Total</span></h5>
-              <div class="d-flex align-items-center">
-                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                  <i class="bi bi-people"></i>
-                </div>
-                <div class="ps-3">
-                  <h6 id="total-students"></h6>
-                  <span class="text-success small pt-1 fw-bold">+0%</span> <span class="text-muted small pt-2 ps-1">increase</span>
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="users-profile.html">
+            <i class="bi bi-person"></i>
+            <span>Profile</span>
+          </a>
+        </li>
+        <!-- End Profile Page Nav -->
+
+        <li class="nav-item">
+          <a class="nav-link" href="pages-chat.html">
+            <i class="bi bi-envelope"></i>
+            <span>Chat</span>
+          </a>
+        </li>
+        <!-- End Chat Page Nav -->
+
+        <li class="nav-item">
+          <a class="nav-link" href="pages-teacher.html">
+            <i class="bi bi-envelope"></i>
+            <span>Teacher</span>
+          </a>
+        </li>
+        <!-- End Teacher Page Nav -->
+
+        <li class="nav-item">
+          <a
+            id="authButton"
+            class="nav-link collapsed"
+            href="https://us-east-1yfkzkrdrk.auth.us-east-1.amazoncognito.com/login?client_id=6q9dfaem3aaobkec9fs0p2n07e&redirect_uri=https://studybuddy-website.s3.us-east-1.amazonaws.com/studybuddy/index.html&response_type=token"
+          >
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Login</span>
+          </a>
+        </li>
+        <!-- End Login Page Nav -->
+      </ul>
+    </aside>
+    <!-- End Sidebar-->
+
+    <!-- ======= Main Content ======= -->
+    <main id="main" class="main">
+      <div class="pagetitle">
+        <h1>Teacher Dashboard</h1>
+        <nav>
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+            <li class="breadcrumb-item active">Teacher Dashboard</li>
+          </ol>
+        </nav>
+      </div>
+      <!-- End Page Title -->
+
+      <section class="section dashboard">
+        <div class="row">
+          <!-- Students Count Card -->
+          <div class="col-lg-4 col-md-6">
+            <div class="card info-card">
+              <div class="card-body">
+                <h5 class="card-title">Students <span>| Total</span></h5>
+                <div class="d-flex align-items-center">
+                  <div
+                    class="card-icon rounded-circle d-flex align-items-center justify-content-center"
+                  >
+                    <i class="bi bi-people"></i>
+                  </div>
+                  <div class="ps-3">
+                    <h6 id="total-students"></h6>
+                    <span class="text-success small pt-1 fw-bold">+0%</span>
+                    <span class="text-muted small pt-2 ps-1">increase</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div><!-- End Students Count Card -->
+          <!-- End Students Count Card -->
 
-
-
-        <!-- Students List Table -->
-        <div class="col-12">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Students List</h5>
-              <button class="btn btn-primary mb-3" onclick="addStudent()">Add Student</button>
-              <table class="table table-striped" id="students-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Bio</th>
-                    <th>LinkedIn</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <!-- Mock data rows will be added via JavaScript -->
-                </tbody>
-              </table>
+          <!-- Students List Table -->
+          <div class="col-12">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Students List</h5>
+                <button class="btn btn-primary mb-3" onclick="addStudent()">
+                  Add Student
+                </button>
+                <table class="table table-striped" id="students-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Phone</th>
+                      <th>Bio</th>
+                      <th>LinkedIn</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Mock data rows will be added via JavaScript -->
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div><!-- End Students List Table -->
+          <!-- End Students List Table -->
+        </div>
+      </section>
+    </main>
+    <!-- End Main Content -->
 
-      </div>
-    </section>
+    <!-- Vendor JS Files -->
+    <script src="https://studybuddy-website.s3.us-east-1.amazonaws.com/studybuddy/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  </main><!-- End Main Content -->
+    <!-- Main JS File -->
+    <script>
+      async function fetchStudents() {
+        const apiUrl =
+          "https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/getAllStudents";
 
-  <!-- Vendor JS Files -->
-  <script src="https://studybuddy-website.s3.us-east-1.amazonaws.com/studybuddy/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        try {
+          const response = await fetch(apiUrl);
+          if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+          }
 
-  <!-- Main JS File -->
-  <script>
-    async function fetchStudents() {
-      const apiUrl = "https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/getAllStudents";
+          const responseBody = await response.json();
 
-      try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
-        }
+          let students = responseBody.body;
+          if (typeof students === "string") {
+            students = JSON.parse(students);
+          }
 
-        const responseBody = await response.json();
+          if (!Array.isArray(students)) {
+            throw new Error("API response is not an array");
+          }
 
-        let students = responseBody.body;
-        if (typeof students === "string") {
-          students = JSON.parse(students);
-        }
+          const tableBody = document.querySelector("#students-table tbody");
+          tableBody.innerHTML = "";
 
-        if (!Array.isArray(students)) {
-          throw new Error("API response is not an array");
-        }
-
-        const tableBody = document.querySelector("#students-table tbody");
-        tableBody.innerHTML = "";
-
-        students.forEach((student, index) => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
+          students.forEach((student, index) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
             <td>${index + 1}</td>
             <td>${student.Name || "N/A"}</td>
             <td>${student.Email || "N/A"}</td>
             <td>${student.phone || "N/A"}</td>
             <td>${student.Bio || "N/A"}</td>
-            <td><a href="${student["linkedin profile"] || "#"}" target="_blank">LinkedIn</a></td>
+            <td><a href="${
+              student["linkedin profile"] || "#"
+            }" target="_blank">LinkedIn</a></td>
             
           `;
-          tableBody.appendChild(row);
-        });
+            tableBody.appendChild(row);
+          });
 
-        document.getElementById("total-students").innerText = students.length;
-
-      } catch (error) {
-        console.error("Error fetching students:", error);
+          document.getElementById("total-students").innerText = students.length;
+        } catch (error) {
+          console.error("Error fetching students:", error);
+        }
       }
-    }
 
-    document.addEventListener("DOMContentLoaded", fetchStudents);
+      document.addEventListener("DOMContentLoaded", fetchStudents);
 
-    function viewStudentDetails(email) {
-      alert(`Details for student with email: ${email}`);
-    }
-  </script>
-  <script type="module" src="assets/js/main.js"></script>
-</body>
-
+      function viewStudentDetails(email) {
+        alert(`Details for student with email: ${email}`);
+      }
+    </script>
+    <script type="module" src="assets/js/main.js"></script>
+  </body>
 </html>
