@@ -203,7 +203,8 @@ document.addEventListener("DOMContentLoaded", () => {
 function handleSignOut() {
     clearTokens("defaultUser");
     updateAuthButton();
-    window.location.reload();
+    //window.location.reload();
+    window.location.assign("index.html");
 }
 
 // Redirect to Cognito Login Page
@@ -357,66 +358,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 300); // Small delay ensures token is stored first
   }
 
-  async function handleFormLogin(event) {
-    event.preventDefault();
-    const userId = "defaultUser";
-    const emailInput = document.getElementById("yourUsername");
-    const passwordInput = document.getElementById("yourPassword");
-    if (!emailInput || !passwordInput) {
-      console.error("Login form is missing fields.");
-      return;
-    }
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
-    if (!email || !password) {
-      alert("Please enter both email and password.");
-      return;
-    }
-    const loginButton = event.target.querySelector("button");
-    if (loginButton) {
-      loginButton.textContent = "Logging in...";
-      loginButton.disabled = true;
-    }
-    try {
-      const response = await fetch(
-        "https://kzgutwddhk.execute-api.us-east-1.amazonaws.com/askQuestion",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        }
-      );
-      const result = await response.json();
-      if (response.ok && result.tokens && result.tokens.id_token) {
-        console.log("Login successful, saving tokens...");
-        saveTokens(userId, result.tokens);
-        window.location.href = "dashboard.html";
-      } else {
-        alert(result.error || "Login failed. Please check your credentials.");
-      }
-    } catch (error) {
-      console.error("Error logging in:", error);
-      alert("An error occurred while logging in. Please try again.");
-    } finally {
-      if (loginButton) {
-        loginButton.textContent = "Login";
-        loginButton.disabled = false;
-      }
-    }
-  }
+  
 
   function handleLoginFlow() {
     handleOAuthLogin("defaultUser");
-    const loginForm = document.getElementById("loginForm");
-    if (loginForm) {
-      loginForm.addEventListener("submit", handleFormLogin);
-    }
     const isProtectedPage = !!document.querySelector('[data-protected="true"]');
     if (isProtectedPage) {
       validateSessionAndRedirect("defaultUser");
     }
   }
-
+  
   /*****************************************************
    * 4. DYNAMO DATA FETCH (STUDENT PROFILE)
    *****************************************************/
