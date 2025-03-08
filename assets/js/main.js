@@ -4,8 +4,24 @@ import * as profile from "./profile.js";
 import * as ui from "./ui.js";
 import * as chat from "./chat.js";
 
+// Function to wait until the token is stored in sessionStorage
+async function waitForToken(retries = 5, delay = 300) {
+  for (let i = 0; i < retries; i++) {
+    const idToken = sessionStorage.getItem("idToken_defaultUser");
+    if (idToken && auth.isTokenValid(idToken)) {
+      return idToken;
+    }
+    console.log(`🔄 Waiting for ID token... Attempt ${i + 1}/${retries}`);
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }
+  console.warn("⚠ Timed out waiting for token.");
+  return null;
+}
+
 // Run when DOM is fully loaded
 document.addEventListener("DOMContentLoaded", async () => {
+  console.log("🌍 DOM fully loaded. Initializing...");
+  
   // Update authentication buttons
   auth.updateAuthButton();
 
@@ -17,35 +33,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Handle login flow (OAuth and session validation) and wait for it to complete
-  await auth.handleLoginFlow();
+  try {
+    // Handle login flow (OAuth and session validation) and wait for it to complete
+    await auth.handleLoginFlow();
+    console.log("✅ Login flow handled.");
 
-  // Check for a valid token and load user data immediately
-  const idToken = sessionStorage.getItem("idToken_defaultUser");
-  if (idToken && auth.isTokenValid(idToken)) {
+    // Wait for token to be available
+    const idToken = await waitForToken();
+    if (!idToken) {
+      console.warn("⚠ No valid token available after waiting.");
+      return;
+    }
+
+    console.log("✅ Valid token found. Fetching user profile...");
+
     const decoded = auth.parseJwt(idToken);
     const userEmail = decoded?.email;
-    console.log("User email from token:", userEmail);
+    console.log("📩 User email from token:", userEmail);
+
     if (userEmail) {
-      // Fetch the user profile from DynamoDB right after login
+      console.log("🔍 Fetching profile from DynamoDB...");
       await profile.loadProfileFromDynamo(userEmail);
-      console.log("Profile loaded from DynamoDB:", profile.profileData);
-      // Update displayed user name throughout the UI
+      console.log("✅ Profile loaded successfully.");
       profile.updateUserNameOnPage();
     }
-  }
-
-  // If on the profile overview page, you can still refresh the profile data
-  const profilePage = !!document.querySelector("#profile-overview");
-  if (profilePage) {
-    const idToken = sessionStorage.getItem("idToken_defaultUser");
-    if (idToken && auth.isTokenValid(idToken)) {
-      const decoded = auth.parseJwt(idToken);
-      const userEmail = decoded?.email;
-      if (userEmail) {
-        await profile.loadProfileFromDynamo(userEmail);
-      }
-    }
+  } catch (error) {
+    console.error("❌ Error during login flow or profile loading:", error);
   }
 
   // Initialize UI components
@@ -60,7 +73,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   ui.initDatatables();
   ui.initEChartsResize();
   ui.initEChartsAutoResize();
-
+  
   // Attach event listener to chat link for profile verification before access
   const chatLink = document.querySelector('a[href="pages-chat.html"]');
   if (chatLink) {
@@ -83,19 +96,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (saveChangesBtn) {
     saveChangesBtn.addEventListener("click", async (event) => {
       event.preventDefault();
-      console.log("Save Changes button clicked");
+      console.log("💾 Save Changes button clicked");
       const updatedName = document.getElementById("fullName")?.value.trim();
       const updatedBio = document.getElementById("about")?.value.trim();
       const updatedPhone = document.getElementById("phone")?.value.trim();
       const updatedLinkedin = document.getElementById("Linkedin")?.value.trim();
       const idToken = sessionStorage.getItem("idToken_defaultUser");
       if (!idToken || !auth.isTokenValid(idToken)) {
-        alert("User is not authenticated or token is invalid/expired.");
+        alert("⚠ User is not authenticated or token is invalid/expired.");
         return;
       }
       const decodedToken = auth.parseJwt(idToken);
       const userEmail = decodedToken?.email;
-      console.log("Updating profile for", userEmail);
+      console.log("📩 Updating profile for", userEmail);
       try {
         const apiUrl =
           "https://18ygiad1a8.execute-api.us-east-1.amazonaws.com/dev/updateProfile";
@@ -114,16 +127,16 @@ document.addEventListener("DOMContentLoaded", async () => {
           }),
         });
         const result = await response.json();
-        console.log("Profile update response:", result);
+        console.log("✅ Profile update response:", result);
         if (response.ok) {
-          alert("Profile updated successfully!");
+          alert("✅ Profile updated successfully!");
           await profile.loadProfileFromDynamo(userEmail);
           profile.updateUserNameOnPage();
         } else {
-          alert(`Failed to update profile: ${result.error || "Unknown error"}`);
+          alert(`❌ Failed to update profile: ${result.error || "Unknown error"}`);
         }
       } catch (error) {
-        console.error("Error updating profile:", error);
+        console.error("❌ Error updating profile:", error);
         alert("An error occurred while updating the profile.");
       }
     });
@@ -133,4 +146,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   setTimeout(() => {
     ui.initEChartsResize();
   }, 200);
+
+  console.log("🎉 Initialization completed!");
 });
