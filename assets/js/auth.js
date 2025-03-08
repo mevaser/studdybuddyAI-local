@@ -1,4 +1,5 @@
 // js/auth.js
+import * as profile from "./profile.js";
 
 //
 // 1) Utility to parse the ?code from the query string
@@ -12,43 +13,45 @@ function getQueryParam(paramName) {
 // 2) Exchange the code for tokens at Cognito's /oauth2/token endpoint
 //
 async function exchangeCodeForTokens(code) {
-  // Replace these with your actual info:
-  const cognitoDomain = "us-east-1y40rmapix.auth.us-east-1.amazoncognito.com";
+  const cognitoDomain = "https://us-east-1y40rmapix.auth.us-east-1.amazoncognito.com";
   const clientId = "6vpka0nstf6sd01n224q1o78pf";
-  const redirectUri =
-    "https://studybudybucket.s3.us-east-1.amazonaws.com/studdybuddyAI-local/index.html";
+  const clientSecret = "107f9ug33pm283te6uovcclg9ks64td24sig01okrdhmq73u2o5h"; // Add client_secret
+  const redirectUri = "https://studybudybucket.s3.us-east-1.amazonaws.com/studdybuddyAI-local/index.html";
 
-  const tokenEndpoint = `https://${cognitoDomain}/oauth2/token`;
+  const tokenEndpoint = `${cognitoDomain}/oauth2/token`;
+
+  // Encode client_id and client_secret in Base64 (Basic Auth)
+  const encodedCredentials = btoa(`${clientId}:${clientSecret}`);
 
   // Build the POST body
   const data = new URLSearchParams();
   data.append("grant_type", "authorization_code");
   data.append("client_id", clientId);
+  data.append("client_secret", clientSecret); // 🔥 Add this line
   data.append("redirect_uri", redirectUri);
   data.append("code", code);
 
-  // If using PKCE, also do:
-  // data.append("code_verifier", myCodeVerifier);
+  console.log("Exchanging code for tokens:", data.toString());
 
   // Make the request
   const response = await fetch(tokenEndpoint, {
     method: "POST",
     headers: {
+      "Authorization": `Basic ${encodedCredentials}`, // 🔥 Use Basic Auth
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: data.toString(),
+    body: data,
   });
 
   if (!response.ok) {
-    // Show response text for debugging
     const errorText = await response.text();
-    throw new Error(
-      `Failed to exchange code for tokens. Status: ${response.status} - ${errorText}`
-    );
+    console.error(`Token exchange failed with status ${response.status}:`, errorText);
+    throw new Error(`Failed to exchange code for tokens. Status: ${response.status} - ${errorText}`);
   }
 
-  // This should be the JSON with id_token, access_token, refresh_token, etc.
-  return await response.json();
+  const tokens = await response.json();
+  console.log("Tokens received:", Object.keys(tokens));
+  return tokens;
 }
 
 //
@@ -79,20 +82,40 @@ export function isTokenValid(idToken) {
   return Date.now() < payload.exp * 1000;
 }
 
-//
 // 4) Token storage / retrieval
 //
 export function saveTokens(userId, tokens) {
+  console.log("Saving tokens:", userId, tokens ? Object.keys(tokens) : null);
+  if (!tokens) {
+    console.error("No tokens provided to saveTokens function");
+    return;
+  }
   if (tokens.id_token) {
     sessionStorage.setItem(`idToken_${userId}`, tokens.id_token);
     sessionStorage.setItem("groups", getUserGroupsFromToken(tokens.id_token));
+    
+    // Extract user info
+    const decodedToken = parseJwt(tokens.id_token);
+    if (decodedToken) {
+      sessionStorage.setItem("userEmail", decodedToken.email || "unknown");
+      let userName = decodedToken.name || decodedToken["custom:name"] || decodedToken["cognito:username"] || "Unknown User";
+      sessionStorage.setItem("userName", userName);
+      console.log("✅ Saved user email and name:", decodedToken.email, userName);
+    }
+    
+    console.log("Saved ID token and user info");
   }
   if (tokens.access_token) {
     sessionStorage.setItem(`accessToken_${userId}`, tokens.access_token);
+    console.log("Saved access token");
   }
   if (tokens.refresh_token) {
     sessionStorage.setItem(`refreshToken_${userId}`, tokens.refresh_token);
+    console.log("Saved refresh token");
   }
+  // Verify tokens were actually saved
+  const savedTokens = getTokensFromStorage(userId);
+  console.log("Tokens saved successfully:", !!savedTokens.id_token);
 }
 
 export function getTokensFromStorage(userId) {
@@ -100,6 +123,8 @@ export function getTokensFromStorage(userId) {
     id_token: sessionStorage.getItem(`idToken_${userId}`) || "",
     access_token: sessionStorage.getItem(`accessToken_${userId}`) || "",
     refresh_token: sessionStorage.getItem(`refreshToken_${userId}`) || "",
+    user_email: sessionStorage.getItem("userEmail") || "",
+    user_name: sessionStorage.getItem("userName") || ""
   };
 }
 
@@ -108,6 +133,8 @@ export function clearTokens(userId) {
   sessionStorage.removeItem("groups");
   sessionStorage.removeItem(`accessToken_${userId}`);
   sessionStorage.removeItem(`refreshToken_${userId}`);
+  sessionStorage.removeItem("userEmail");
+  sessionStorage.removeItem("userName");
   sessionStorage.removeItem("userData");
   sessionStorage.clear(); // Full session reset
 }
@@ -117,6 +144,7 @@ export function getUserGroupsFromToken(idToken) {
   const decodedToken = parseJwt(idToken);
   return decodedToken ? decodedToken["cognito:groups"] || null : null;
 }
+
 
 //
 // 5) Cognito redirect function (already set to code flow)
@@ -188,35 +216,51 @@ export function handleSignOut() {
 //
 // 7) Profile update call (unchanged)
 //
-export async function updateUserProfileAfterLogin(email, name) {
+export async function updateUserProfileAfterLogin(email) {
   if (!email) {
     console.error("❌ Missing email! Cannot update user profile.");
     return;
   }
-  const apiUrl =
-    "https://18ygiad1a8.execute-api.us-east-1.amazonaws.com/dev/updateProfileAfterFirstLogin";
-  const requestBody = JSON.stringify({
-    body: JSON.stringify({ Email: email, Name: name }),
-  });
-  console.log(`📩 Sending update request for: Email=${email}, Name=${name}`);
+
+  const apiUrl = "https://18ygiad1a8.execute-api.us-east-1.amazonaws.com/dev/updateProfileAfterFirstLogin";
+
+  const requestBody = JSON.stringify({ Email: email });
+
+  console.log(`📩 Sending update request for: Email=${email}`);
   console.log("📝 Request Body:", requestBody);
+
   try {
     const response = await fetch(apiUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
       body: requestBody,
     });
-    const result = await response.json();
-    console.log("✅ User profile update response:", result);
-    if (response.ok) {
+
+    let result;
+    try {
+      result = await response.json();
+    } catch (error) {
+      console.error("❌ Failed to parse JSON response:", error);
+      result = { error: "Invalid JSON response from server" };
+    }
+
+    if (response.status === 201) {
       console.log("✅ User profile successfully updated in DynamoDB!");
+    } else if (response.status === 400) {
+      console.warn("⚠ Bad Request: Check API request format.");
+    } else if (response.status === 500) {
+      console.warn("⚠ Server error: Something went wrong on the backend.");
     } else {
-      console.warn("⚠ Failed to update user profile in DynamoDB:", result.error);
+      console.warn(`⚠ Unexpected status code: ${response.status}`, result);
     }
   } catch (error) {
     console.error("❌ Error updating user profile in DynamoDB:", error);
   }
 }
+
 
 //
 // 8) Main login flow
@@ -225,10 +269,14 @@ export async function handleOAuthLogin(userId = "defaultUser") {
   try {
     // 1) Check if we got a ?code=... in the URL
     const code = getQueryParam("code");
+    console.log("Auth code present:", !!code); // Log if code exists
+
     if (code) {
       console.log("Found code in query string. Exchanging for tokens...");
       // Exchange the code for tokens
       const tokenResult = await exchangeCodeForTokens(code);
+      console.log("Token exchange successful:", !!tokenResult);
+
       // tokenResult should have { id_token, access_token, refresh_token, ... }
 
       // 2) Save tokens to sessionStorage

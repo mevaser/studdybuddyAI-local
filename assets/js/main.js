@@ -5,7 +5,7 @@ import * as ui from "./ui.js";
 import * as chat from "./chat.js";
 
 // Run when DOM is fully loaded
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   // Update authentication buttons
   auth.updateAuthButton();
 
@@ -17,22 +17,33 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Handle login flow (OAuth and session validation)
-  auth.handleLoginFlow();
+  // Handle login flow (OAuth and session validation) and wait for it to complete
+  await auth.handleLoginFlow();
 
-  // If on the profile overview page, load the profile; otherwise update the displayed user name
+  // Check for a valid token and load user data immediately
+  const idToken = sessionStorage.getItem("idToken_defaultUser");
+  if (idToken && auth.isTokenValid(idToken)) {
+    const decoded = auth.parseJwt(idToken);
+    const userEmail = decoded?.email;
+    if (userEmail) {
+      // Fetch the user profile from DynamoDB right after login
+      await profile.loadProfileFromDynamo(userEmail);
+      // Update displayed user name throughout the UI
+      profile.updateUserNameOnPage();
+    }
+  }
+
+  // If on the profile overview page, you can still refresh the profile data
   const profilePage = !!document.querySelector("#profile-overview");
   if (profilePage) {
     const idToken = sessionStorage.getItem("idToken_defaultUser");
     if (idToken && auth.isTokenValid(idToken)) {
       const decoded = auth.parseJwt(idToken);
-      const userEmail = decoded && decoded.email;
+      const userEmail = decoded?.email;
       if (userEmail) {
-        profile.loadProfileFromDynamo(userEmail);
+        await profile.loadProfileFromDynamo(userEmail);
       }
     }
-  } else {
-    profile.updateUserNameOnPage();
   }
 
   // Initialize UI components
