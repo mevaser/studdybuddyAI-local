@@ -25,7 +25,7 @@ export async function checkBioBeforeChat() {
       alert("⚠ Email not found in token.");
       return;
     }
-    const apiUrl = `https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/checkProfile?email=${encodeURIComponent(
+    const apiUrl = `https://18ygiad1a8.execute-api.us-east-1.amazonaws.com/dev/checkProfile?email=${encodeURIComponent(
       userEmail
     )}`;
     const response = await fetch(apiUrl, { method: "GET" });
@@ -79,7 +79,7 @@ export function initChat() {
         return;
       }
       const response = await fetch(
-        "https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/AskGPT",
+        "https://18ygiad1a8.execute-api.us-east-1.amazonaws.com/dev/AskGPT",
         {
           method: "POST",
           headers: {

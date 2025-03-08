@@ -25,9 +25,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (idToken && auth.isTokenValid(idToken)) {
     const decoded = auth.parseJwt(idToken);
     const userEmail = decoded?.email;
+    console.log("User email from token:", userEmail);
     if (userEmail) {
       // Fetch the user profile from DynamoDB right after login
       await profile.loadProfileFromDynamo(userEmail);
+      console.log("Profile loaded from DynamoDB:", profile.profileData);
       // Update displayed user name throughout the UI
       profile.updateUserNameOnPage();
     }
@@ -96,7 +98,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.log("Updating profile for", userEmail);
       try {
         const apiUrl =
-          "https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/updateProfile";
+          "https://18ygiad1a8.execute-api.us-east-1.amazonaws.com/dev/updateProfile";
         const response = await fetch(apiUrl, {
           method: "POST",
           headers: {

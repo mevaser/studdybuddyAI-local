@@ -2,7 +2,7 @@
 export async function loadProfileFromDynamo(userEmail) {
   try {
     console.log("Loading student profile for:", userEmail);
-    const apiUrl = `https://3i1nb1t27e.execute-api.us-east-1.amazonaws.com/stage/updateProfile?Email=${encodeURIComponent(
+    const apiUrl = `https://18ygiad1a8.execute-api.us-east-1.amazonaws.com/dev/updateProfile?Email=${encodeURIComponent(
       userEmail
     )}`;
     const response = await fetch(apiUrl);

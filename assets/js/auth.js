@@ -298,7 +298,7 @@ export async function handleOAuthLogin(userId = "defaultUser") {
       const userName = decodedToken?.name || "Unknown User";
       if (userEmail) {
         console.log("📩 Attempting to update user profile in DynamoDB...");
-        updateUserProfileAfterLogin(userEmail, userName);
+        updateUserProfileAfterLogin(userEmail);
       } else {
         console.warn("⚠ User email not found in token.");
       }
