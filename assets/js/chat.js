@@ -2,21 +2,34 @@
 import { parseJwt, isTokenValid, redirectToCognito } from "./auth.js";
 import { escapeHTML } from "./utils.js";
 
+// Ensures chat access only for logged-in users with filled About field
 export async function checkBioBeforeChat() {
-  const idToken = sessionStorage.getItem("idToken_defaultUser");
-  if (!idToken || !isTokenValid(idToken)) {
-    alert("⚠ You must be logged in to access the chat.");
-    redirectToCognito();
+  // Prevent redirect loop
+  if (sessionStorage.getItem("redirectedToProfile") === "true") {
+    console.warn("⛔ Preventing redirect loop to profile.");
     return;
   }
+
+  const idToken = sessionStorage.getItem("idToken_defaultUser");
+  if (!idToken || !isTokenValid(idToken)) {
+    const confirmed = confirm(
+      "👋 Hello! To use the chat, please log in first. Click OK to proceed to the login page."
+    );
+    if (confirmed) {
+      redirectToCognito();
+    }
+    return;
+  }
+
   const userData = sessionStorage.getItem("userData");
   if (userData) {
     const parsedData = JSON.parse(userData);
-    if (parsedData.Bio && parsedData.Bio.trim() !== "") {
+    if (parsedData.About && parsedData.About.trim() !== "") {
       window.location.assign("pages-chat.html");
       return;
     }
   }
+
   try {
     console.log("🔍 Checking profile from API...");
     const decodedToken = parseJwt(idToken);
@@ -32,11 +45,16 @@ export async function checkBioBeforeChat() {
     if (!response.ok) throw new Error("Failed to check profile.");
     const result = await response.json();
     const responseBody = JSON.parse(result.body);
-    if (responseBody.missing_fields?.includes("Bio")) {
-      alert("⚠ You must add a Bio before accessing the chat.");
-      window.location.assign("users-profile.html");
+    if (responseBody.missing_fields?.includes("About")) {
+      alert(
+        "⚠ You need to fill out your About section before using the chat. Redirecting to profile page..."
+      );
+      sessionStorage.setItem("redirectedToProfile", "true");
+      window.location.assign(
+        "https://studybudybucket.s3.us-east-1.amazonaws.com/studdybuddyAI-local/users-profile.html"
+      );
     } else {
-      console.log("✅ Bio is set, allowing access.");
+      console.log("✅ About is set, allowing access.");
       window.location.assign("pages-chat.html");
     }
   } catch (error) {
@@ -53,6 +71,7 @@ export function initChat() {
     console.log("One or more required chat elements are missing.");
     return;
   }
+
   function addMessage(content, sender = "user") {
     const message = document.createElement("div");
     message.className = `message ${sender}`;
@@ -60,6 +79,7 @@ export function initChat() {
     chatWindow.appendChild(message);
     chatWindow.scrollTop = chatWindow.scrollHeight;
   }
+
   sendButton.addEventListener("click", async () => {
     const message = chatInput.value.trim();
     if (!message) return;
@@ -69,7 +89,10 @@ export function initChat() {
     try {
       const idToken = sessionStorage.getItem("idToken_defaultUser");
       if (!idToken || !isTokenValid(idToken)) {
-        addMessage("Authentication failed or token expired. Please log in again.", "api");
+        addMessage(
+          "Authentication failed or token expired. Please log in again.",
+          "api"
+        );
         return;
       }
       const decodedToken = parseJwt(idToken);
@@ -105,9 +128,13 @@ export function initChat() {
       }
     } catch (error) {
       console.error("Chat error:", error);
-      addMessage("An error occurred while fetching the answer. Please try again.", "api");
+      addMessage(
+        "An error occurred while fetching the answer. Please try again.",
+        "api"
+      );
     }
   });
+
   chatInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
