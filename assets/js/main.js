@@ -12,7 +12,7 @@ async function waitForToken(retries = 5, delay = 300) {
       return idToken;
     }
     console.log(`🔄 Waiting for ID token... Attempt ${i + 1}/${retries}`);
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await new Promise((resolve) => setTimeout(resolve, delay));
   }
   console.warn("⚠ Timed out waiting for token.");
   return null;
@@ -21,7 +21,7 @@ async function waitForToken(retries = 5, delay = 300) {
 // Run when DOM is fully loaded
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("🌍 DOM fully loaded. Initializing...");
-  
+
   // Update authentication buttons
   auth.updateAuthButton();
 
@@ -34,34 +34,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   try {
-    // Handle login flow (OAuth and session validation) and wait for it to complete
+    // Handle login flow (OAuth and session validation)
     await auth.handleLoginFlow();
     console.log("✅ Login flow handled.");
-
-    // Wait for token to be available
-    const idToken = await waitForToken();
-    if (!idToken) {
-      console.warn("⚠ No valid token available after waiting.");
-      return;
-    }
-
-    console.log("✅ Valid token found. Fetching user profile...");
-
-    const decoded = auth.parseJwt(idToken);
-    const userEmail = decoded?.email;
-    console.log("📩 User email from token:", userEmail);
-
-    if (userEmail) {
-      console.log("🔍 Fetching profile from DynamoDB...");
-      await profile.loadProfileFromDynamo(userEmail);
-      console.log("✅ Profile loaded successfully.");
-      profile.updateUserNameOnPage();
-    }
   } catch (error) {
-    console.error("❌ Error during login flow or profile loading:", error);
+    console.error("❌ Error during login flow:", error);
   }
 
-  // Initialize UI components
+  // ✅ Always initialize UI components (even for guests)
   ui.initSidebarToggle();
   ui.initSearchBarToggle();
   ui.initNavbarLinksActive();
@@ -73,7 +53,31 @@ document.addEventListener("DOMContentLoaded", async () => {
   ui.initDatatables();
   ui.initEChartsResize();
   ui.initEChartsAutoResize();
-  
+
+  // Wait for token to be available
+  const idToken = await waitForToken();
+  if (!idToken) {
+    console.warn("⚠ No valid token available after waiting.");
+    return;
+  }
+
+  console.log("✅ Valid token found. Fetching user profile...");
+
+  const decoded = auth.parseJwt(idToken);
+  const userEmail = decoded?.email;
+  console.log("📩 User email from token:", userEmail);
+
+  if (userEmail) {
+    console.log("🔍 Fetching profile from DynamoDB...");
+    try {
+      await profile.loadProfileFromDynamo(userEmail);
+      console.log("✅ Profile loaded successfully.");
+      profile.updateUserNameOnPage();
+    } catch (error) {
+      console.error("❌ Error loading profile:", error);
+    }
+  }
+
   // Attach event listener to chat link for profile verification before access
   const chatLink = document.querySelector('a[href="pages-chat.html"]');
   if (chatLink) {
@@ -133,7 +137,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           await profile.loadProfileFromDynamo(userEmail);
           profile.updateUserNameOnPage();
         } else {
-          alert(`❌ Failed to update profile: ${result.error || "Unknown error"}`);
+          alert(
+            `❌ Failed to update profile: ${result.error || "Unknown error"}`
+          );
         }
       } catch (error) {
         console.error("❌ Error updating profile:", error);
