@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (userEmail) {
     console.log("🔍 Fetching profile from DynamoDB...");
     try {
-      await profile.loadProfileFromDynamo(userEmail);
+      await profile.loadProfileFromDynamo(userEmail.toLowerCase());
       console.log("✅ Profile loaded successfully.");
       profile.updateUserNameOnPage();
     } catch (error) {
@@ -100,9 +100,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (saveChangesBtn) {
     saveChangesBtn.addEventListener("click", async (event) => {
       event.preventDefault();
-      console.log("💾 Save Changes button clicked");
+      console.log("🗒️ Save Changes button clicked");
       const updatedName = document.getElementById("fullName")?.value.trim();
-      const updatedBio = document.getElementById("about")?.value.trim();
+      const updatedAbout = document.getElementById("about")?.value.trim();
       const updatedPhone = document.getElementById("phone")?.value.trim();
       const updatedLinkedin = document.getElementById("Linkedin")?.value.trim();
       const idToken = sessionStorage.getItem("idToken_defaultUser");
@@ -125,8 +125,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           body: JSON.stringify({
             Email: userEmail,
             Name: updatedName,
-            Bio: updatedBio,
-            phone: updatedPhone,
+            About: updatedAbout,
+            Phone: updatedPhone,
             linkedin: updatedLinkedin,
           }),
         });
@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.log("✅ Profile update response:", result);
         if (response.ok) {
           alert("✅ Profile updated successfully!");
-          await profile.loadProfileFromDynamo(userEmail);
+          await profile.loadProfileFromDynamo(userEmail); // reload & update everything
           profile.updateUserNameOnPage();
         } else {
           alert(

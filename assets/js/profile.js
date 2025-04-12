@@ -2,42 +2,49 @@
 export async function loadProfileFromDynamo(userEmail) {
   try {
     console.log("Loading student profile for:", userEmail);
-    const apiUrl = `https://18ygiad1a8.execute-api.us-east-1.amazonaws.com/dev/updateProfile?Email=${encodeURIComponent(
-      userEmail
+
+    // Construct API URL
+    const apiUrl = `https://18ygiad1a8.execute-api.us-east-1.amazonaws.com/dev/getStudent?Email=${encodeURIComponent(
+      userEmail.toLowerCase()
     )}`;
-    const response = await fetch(apiUrl);
+
+    // Make the GET request
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        // ⚠️ Authorization header removed for now (CORS issue during GET)
+      },
+    });
+
     if (!response.ok) {
       throw new Error("Failed to fetch student profile");
     }
-    const studentData = await response.json();
-    console.log("Dynamo student data:", studentData);
+
+    const result = await response.json();
+
+    // Some APIs wrap JSON in "body" stringified JSON
+    const studentData =
+      typeof result === "string" ? JSON.parse(result) : result;
+    console.log("✅ Dynamo student data:", studentData);
+
+    // Save to session storage
     sessionStorage.setItem("userData", JSON.stringify(studentData));
-    
-    // Update "About" section
+
+    // Update UI fields
     const bioEl = document.querySelector(".user-bio");
-    if (bioEl && studentData.About) {
-      bioEl.textContent = studentData.About;
-    }
-    
-    // Update all "Name" elements
-    const nameEls = document.querySelectorAll(".user-name");
-    nameEls.forEach((el) => {
+    if (bioEl && studentData.About) bioEl.textContent = studentData.About;
+
+    document.querySelectorAll(".user-name").forEach((el) => {
       el.textContent = studentData.Name || "Default Name";
     });
-    
-    // Update Email
+
     const emailEl = document.querySelector(".user-email");
-    if (emailEl) {
-      emailEl.textContent = studentData.Email || userEmail;
-    }
-    
-    // Update Phone
+    if (emailEl) emailEl.textContent = studentData.Email || userEmail;
+
     const phoneEl = document.querySelector(".user-phone");
-    if (phoneEl && studentData.Phone) {
-      phoneEl.textContent = studentData.Phone;
-    }
-    
-    // Update LinkedIn
+    if (phoneEl && studentData.Phone) phoneEl.textContent = studentData.Phone;
+
     const linkedinContainer = document.querySelector(".user-linkedin");
     if (linkedinContainer) {
       const anchor = linkedinContainer.querySelector("a");
@@ -46,17 +53,15 @@ export async function loadProfileFromDynamo(userEmail) {
         anchor.textContent = studentData["linkedin profile"] || "";
       }
     }
-    
-    // Update dropdown span
+
     const dropdownNameEl = document.querySelector(
       ".d-none.d-md-block.dropdown-toggle.ps-2"
     );
     if (dropdownNameEl && studentData.Name) {
       dropdownNameEl.textContent = studentData.Name;
     }
-    
-    // Ensure Overview Page is Updated
-    updateOverviewPage();
+
+    populateProfileEditForm();
   } catch (error) {
     console.error("Error loading student profile:", error);
     alert("Could not load profile from Dynamo via GET request.");

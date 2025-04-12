@@ -104,7 +104,10 @@ export function saveTokens(userId, tokens) {
     // Extract user info
     const decodedToken = parseJwt(tokens.id_token);
     if (decodedToken) {
-      sessionStorage.setItem("userEmail", decodedToken.email || "unknown");
+      sessionStorage.setItem(
+        "userEmail",
+        decodedToken.email?.toLowerCase() || "unknown"
+      );
       let userName =
         decodedToken.name ||
         decodedToken["custom:name"] ||
