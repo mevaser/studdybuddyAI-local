@@ -1,10 +1,8 @@
-// js/chat.js
 import { parseJwt, isTokenValid, redirectToCognito } from "./auth.js";
 import { escapeHTML } from "./utils.js";
 
 // Ensures chat access only for logged-in users with filled About field
 export async function checkBioBeforeChat() {
-  // Prevent redirect loop
   if (sessionStorage.getItem("redirectedToProfile") === "true") {
     console.warn("⛔ Preventing redirect loop to profile.");
     return;
@@ -25,7 +23,9 @@ export async function checkBioBeforeChat() {
   if (userData) {
     const parsedData = JSON.parse(userData);
     if (parsedData.About && parsedData.About.trim() !== "") {
-      window.location.assign("pages-chat.html");
+      if (!window.location.href.includes("pages-chat.html")) {
+        window.location.assign("pages-chat.html");
+      }
       return;
     }
   }
@@ -44,7 +44,8 @@ export async function checkBioBeforeChat() {
     const response = await fetch(apiUrl, { method: "GET" });
     if (!response.ok) throw new Error("Failed to check profile.");
     const result = await response.json();
-    const responseBody = JSON.parse(result.body);
+    const responseBody =
+      typeof result.body === "string" ? JSON.parse(result.body) : result.body;
     if (responseBody.missing_fields?.includes("About")) {
       alert(
         "⚠ You need to fill out your About section before using the chat. Redirecting to profile page..."
@@ -55,7 +56,9 @@ export async function checkBioBeforeChat() {
       );
     } else {
       console.log("✅ About is set, allowing access.");
-      window.location.assign("pages-chat.html");
+      if (!window.location.href.includes("pages-chat.html")) {
+        window.location.assign("pages-chat.html");
+      }
     }
   } catch (error) {
     console.error("❌ Error checking profile:", error);
@@ -117,10 +120,8 @@ export function initChat() {
         throw new Error("Failed to get a response from the server");
       }
       const result = await response.json();
-      let parsedBody = {};
-      if (result.body) {
-        parsedBody = JSON.parse(result.body);
-      }
+      let parsedBody =
+        typeof result.body === "string" ? JSON.parse(result.body) : result.body;
       if (parsedBody.answer) {
         addMessage(parsedBody.answer, "api");
       } else {

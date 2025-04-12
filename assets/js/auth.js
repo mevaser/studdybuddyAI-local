@@ -13,10 +13,12 @@ function getQueryParam(paramName) {
 // 2) Exchange the code for tokens at Cognito's /oauth2/token endpoint
 //
 async function exchangeCodeForTokens(code) {
-  const cognitoDomain = "https://us-east-1y40rmapix.auth.us-east-1.amazoncognito.com";
+  const cognitoDomain =
+    "https://us-east-1y40rmapix.auth.us-east-1.amazoncognito.com";
   const clientId = "6vpka0nstf6sd01n224q1o78pf";
   const clientSecret = "107f9ug33pm283te6uovcclg9ks64td24sig01okrdhmq73u2o5h"; // Add client_secret
-  const redirectUri = "https://studybudybucket.s3.us-east-1.amazonaws.com/studdybuddyAI-local/index.html";
+  const redirectUri =
+    "https://studybudybucket.s3.us-east-1.amazonaws.com/studdybuddyAI-local/index.html";
 
   const tokenEndpoint = `${cognitoDomain}/oauth2/token`;
 
@@ -37,7 +39,7 @@ async function exchangeCodeForTokens(code) {
   const response = await fetch(tokenEndpoint, {
     method: "POST",
     headers: {
-      "Authorization": `Basic ${encodedCredentials}`, // 🔥 Use Basic Auth
+      Authorization: `Basic ${encodedCredentials}`, // 🔥 Use Basic Auth
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: data,
@@ -45,8 +47,13 @@ async function exchangeCodeForTokens(code) {
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error(`Token exchange failed with status ${response.status}:`, errorText);
-    throw new Error(`Failed to exchange code for tokens. Status: ${response.status} - ${errorText}`);
+    console.error(
+      `Token exchange failed with status ${response.status}:`,
+      errorText
+    );
+    throw new Error(
+      `Failed to exchange code for tokens. Status: ${response.status} - ${errorText}`
+    );
   }
 
   const tokens = await response.json();
@@ -93,16 +100,27 @@ export function saveTokens(userId, tokens) {
   if (tokens.id_token) {
     sessionStorage.setItem(`idToken_${userId}`, tokens.id_token);
     sessionStorage.setItem("groups", getUserGroupsFromToken(tokens.id_token));
-    
+
     // Extract user info
     const decodedToken = parseJwt(tokens.id_token);
     if (decodedToken) {
-      sessionStorage.setItem("userEmail", decodedToken.email || "unknown");
-      let userName = decodedToken.name || decodedToken["custom:name"] || decodedToken["cognito:username"] || "Unknown User";
+      sessionStorage.setItem(
+        "userEmail",
+        decodedToken.email?.toLowerCase() || "unknown"
+      );
+      let userName =
+        decodedToken.name ||
+        decodedToken["custom:name"] ||
+        decodedToken["cognito:username"] ||
+        "Unknown User";
       sessionStorage.setItem("userName", userName);
-      console.log("✅ Saved user email and name:", decodedToken.email, userName);
+      console.log(
+        "✅ Saved user email and name:",
+        decodedToken.email,
+        userName
+      );
     }
-    
+
     console.log("Saved ID token and user info");
   }
   if (tokens.access_token) {
@@ -124,7 +142,7 @@ export function getTokensFromStorage(userId) {
     access_token: sessionStorage.getItem(`accessToken_${userId}`) || "",
     refresh_token: sessionStorage.getItem(`refreshToken_${userId}`) || "",
     user_email: sessionStorage.getItem("userEmail") || "",
-    user_name: sessionStorage.getItem("userName") || ""
+    user_name: sessionStorage.getItem("userName") || "",
   };
 }
 
@@ -145,7 +163,6 @@ export function getUserGroupsFromToken(idToken) {
   return decodedToken ? decodedToken["cognito:groups"] || null : null;
 }
 
-
 //
 // 5) Cognito redirect function (already set to code flow)
 //
@@ -157,7 +174,7 @@ export function redirectToCognito() {
     "&response_type=code" +
     "&scope=email+openid+phone" +
     "&redirect_uri=https://studybudybucket.s3.us-east-1.amazonaws.com/studdybuddyAI-local/index.html";
-    
+
   console.warn("No valid token. Redirecting to sign-in...");
   window.location.href = cognitoSignInURL;
 }
@@ -169,7 +186,10 @@ export function updateAuthButton() {
   const authButton = document.getElementById("authButton");
   const signOutButton = document.getElementById("signOutButton");
 
-  console.log("🔍 Debugging updateAuthButton...", { authButton, signOutButton });
+  console.log("🔍 Debugging updateAuthButton...", {
+    authButton,
+    signOutButton,
+  });
   const idToken = sessionStorage.getItem("idToken_defaultUser");
   console.log("🔑 Token Found:", idToken);
 
@@ -222,11 +242,12 @@ export async function updateUserProfileAfterLogin(email) {
     return;
   }
 
-  const apiUrl = "https://18ygiad1a8.execute-api.us-east-1.amazonaws.com/dev/updateProfileAfterFirstLogin";
+  const apiUrl =
+    "https://18ygiad1a8.execute-api.us-east-1.amazonaws.com/dev/updateProfileAfterFirstLogin";
 
   const requestBody = JSON.stringify({ Email: email });
 
-  console.log(`📩 Sending update request for: Email=${email}`);
+  console.log(`📬 Sending update request for: Email=${email}`);
   console.log("📝 Request Body:", requestBody);
 
   try {
@@ -234,7 +255,7 @@ export async function updateUserProfileAfterLogin(email) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json"
+        Accept: "application/json",
       },
       body: requestBody,
     });
@@ -247,12 +268,18 @@ export async function updateUserProfileAfterLogin(email) {
       result = { error: "Invalid JSON response from server" };
     }
 
+    const message = result?.message || "";
+    const isExistingUser =
+      response.status === 200 && message.includes("already exists");
+
     if (response.status === 201) {
       console.log("✅ User profile successfully updated in DynamoDB!");
     } else if (response.status === 400) {
       console.warn("⚠ Bad Request: Check API request format.");
     } else if (response.status === 500) {
       console.warn("⚠ Server error: Something went wrong on the backend.");
+    } else if (isExistingUser) {
+      console.log("ℹ️ User already exists. Skipping creation.");
     } else {
       console.warn(`⚠ Unexpected status code: ${response.status}`, result);
     }
@@ -260,7 +287,6 @@ export async function updateUserProfileAfterLogin(email) {
     console.error("❌ Error updating user profile in DynamoDB:", error);
   }
 }
-
 
 //
 // 8) Main login flow
@@ -321,7 +347,9 @@ export function handleLoginFlow() {
   handleOAuthLogin("defaultUser")
     .then(() => {
       // After we try to login, check if protected
-      const isProtectedPage = !!document.querySelector('[data-protected="true"]');
+      const isProtectedPage = !!document.querySelector(
+        '[data-protected="true"]'
+      );
       if (isProtectedPage) {
         // If still no valid tokens, redirect
         const tokens = getTokensFromStorage("defaultUser");
