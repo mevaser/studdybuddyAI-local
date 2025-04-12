@@ -111,7 +111,7 @@ export function populateProfileEditForm() {
       console.log("Setting phone to:", userData.Phone || "");
       console.log("Resulting input value:", phoneInput.value);
     } else {
-      console.error("Could not find #phone input in the DOM!");
+      console.warn("Skipping phone input – element not found on this page.");
     }
 
     // Populate Email (read-only)
