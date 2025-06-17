@@ -154,16 +154,18 @@
 
         <li class="nav-item teacher-nav">
           <a class="nav-link" href="pages-teacher.html">
-            <i class="bi bi-envelope"></i>
-            <span>Teacher</span>
+            <i class="bi bi-list"></i>
+            <span>Lecturer Report</span>
           </a>
         </li>
         <!-- End Teacher Page Nav -->
         <script>
           // Check if 'teacher' is in sessionStorage.getItem('groups')
-          let groups = sessionStorage.getItem("groups") || ""; // Ensure it's a string
-          if (!groups.includes("teachers")) {
-            document.querySelector(".teacher-nav").style.display = "none"; // Hide the element
+          let groups = sessionStorage.getItem("groups") || ""; // מחרוזת של קבוצות מה-JWT
+          if (!groups.includes("Teachers")) {                  // ← כאן מסתתרות התפריטים
+            document.querySelectorAll(".teacher-nav").forEach(el => {
+              el.style.display = "none";
+            });
           }
         </script>
 
