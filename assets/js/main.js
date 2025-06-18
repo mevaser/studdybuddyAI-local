@@ -153,5 +153,69 @@ document.addEventListener("DOMContentLoaded", async () => {
     ui.initEChartsResize();
   }, 200);
 
+  // 🎓 Lecturer Report Popup Logic
+  const lecturerLink = document.getElementById("lecturerReportLink");
+  const modal = document.getElementById("lecturerReportModal");
+  const cancelBtn = document.getElementById("cancelReportBtn");
+
+  if (lecturerLink && modal && cancelBtn) {
+    lecturerLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      modal.style.display = "flex";
+    });
+
+    cancelBtn.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.style.display = "none";
+      }
+    });
+
+      // 📤 Generate Lecturer Report - call Lambda
+    const generateBtn = document.getElementById("generateReportBtn");
+    generateBtn?.addEventListener("click", async () => {
+    const startDate = document.getElementById("reportStartDate").value;
+    const endDate = document.getElementById("reportEndDate").value;
+    const includeTop5 = document.getElementById("includeTop5").checked;
+    const includeInactive = document.getElementById("includeInactive").checked;
+
+    const payload = {
+      startDate,
+      endDate,
+      includeTop5,
+      includeInactive,
+    };
+
+    console.log("📦 Sending report payload:", payload);
+
+    try {
+      const response = await fetch(
+        "https://18ygiad1a8.execute-api.us-east-1.amazonaws.com/dev/LecturerReport",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const result = await response.json();
+      console.log("📄 Lambda response:", result);
+
+      alert("✅ Report sent! Check console for details.");
+      modal.style.display = "none";
+    } catch (error) {
+      console.error("❌ Error calling LecturerReport API:", error);
+      alert("Error calling report API. See console.");
+    }
+  });
+
+  }
+
+
   console.log("🎉 Initialization completed!");
 });

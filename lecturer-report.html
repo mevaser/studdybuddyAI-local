@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lecturer Report</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+    }
+
+    /* רקע חצי שקוף */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* תיבת המודאל */
+    .modal {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #555;
+      width: 400px;
+      max-width: 90%;
+    }
+
+    .modal h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+
+    .modal label {
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .modal button {
+      margin-right: 10px;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- כפתור לפתיחת מודאל -->
+  <button onclick="openModal()">📄 Generate Lecturer Report</button>
+
+  <!-- המודאל עצמו -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h2>Generate Lecturer Report</h2>
+
+      <label>Start Date: <input type="date" id="startDate" /></label>
+      <label>End Date: <input type="date" id="endDate" /></label>
+      <label><input type="checkbox" id="includeTop5" checked /> Include Top 5</label>
+      <label><input type="checkbox" id="includeInactive" checked /> Include Inactive Users</label>
+
+      <button onclick="generateReport()">Generate PDF</button>
+      <button onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    function openModal() {
+      document.getElementById("modalOverlay").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("modalOverlay").style.display = "none";
+    }
+
+    async function generateReport() {
+      const startDate = document.getElementById("startDate").value;
+      const endDate = document.getElementById("endDate").value;
+      const includeTop5 = document.getElementById("includeTop5").checked;
+      const includeInactive = document.getElementById("includeInactive").checked;
+
+      if (!startDate || !endDate) {
+        alert("Please select a start and end date.");
+        return;
+      }
+
+      const body = {
+        startDate,
+        endDate,
+        includeTop5,
+        includeInactive
+      };
+
+      try {
+        const res = await fetch("https://YOUR-LAMBDA-ENDPOINT", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+
+        const result = await res.json();
+        const text = JSON.stringify(result, null, 2);
+        const blob = new Blob([text], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `lecturer_report_${startDate}_to_${endDate}.pdf`;
+        a.click();
+        closeModal();
+      } catch (err) {
+        alert("Failed to generate report.");
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
