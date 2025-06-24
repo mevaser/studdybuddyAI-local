@@ -6,6 +6,20 @@ dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table("StudentSession")
 
 def lambda_handler(event, context):
+    headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Max-Age": "86400"
+    }
+    
+    if event.get('httpMethod') == 'OPTIONS':
+        return {
+            "statusCode": 200,
+            "headers": headers,
+            "body": ""
+        }
+
     try:
         if "body" in event:
             if isinstance(event["body"], str):
@@ -17,13 +31,10 @@ def lambda_handler(event, context):
     except (json.JSONDecodeError, TypeError):
         return {
             "statusCode": 400,
-            "headers": {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "POST, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type"
-            },
+            "headers": headers,
             "body": json.dumps({"error": "Invalid or missing JSON body"})
         }
+        
     start_date = body.get("startDate")
     end_date = body.get("endDate")
     
@@ -34,11 +45,7 @@ def lambda_handler(event, context):
     if not start_date or not end_date:
         return {
             "statusCode": 400,
-            "headers": {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "POST, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type"
-            },
+            "headers": headers,
             "body": json.dumps({"error": "Missing startDate or endDate"})
         }
 
@@ -50,11 +57,7 @@ def lambda_handler(event, context):
     except Exception as e:
         return {
             "statusCode": 500,
-            "headers": {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "POST, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type"
-            },
+            "headers": headers,
             "body": json.dumps({"error": f"DynamoDB error: {str(e)}"})
         }
 
@@ -72,7 +75,6 @@ def lambda_handler(event, context):
         result["top5"] = [{"email": email, "count": count} for email, count in top5]
 
     if include_inactive:
-        # כאן הוגדר סף של 1000, ייתכן שתרצה לשנות זאת בהתאם להגדרה של "לא פעיל"
         inactive = [
             {"email": email, "count": count}
             for email, count in email_counts.items()
@@ -82,10 +84,6 @@ def lambda_handler(event, context):
 
     return {
         "statusCode": 200,
-        "headers": {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type"
-        },
+        "headers": headers,
         "body": json.dumps(result)
     }

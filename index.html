@@ -282,6 +282,8 @@
     <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1360.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/5.2.5/amazon-cognito-identity.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <script type="module" src="assets/js/lecturer-report.js"></script>
+
 
     <!-- Template Main JS File -->
     <script type="module" src="assets/js/main.js"></script>
@@ -293,7 +295,8 @@
         <label>Start Date: <input type="date" id="reportStartDate" /></label><br /><br />
         <label>End Date: <input type="date" id="reportEndDate" /></label><br /><br />
         <label><input type="checkbox" id="includeTop5" /> Include Top 5</label><br />
-        <label><input type="checkbox" id="includeInactive" /> Include Inactive Users</label><br /><br />
+        <label><input type="checkbox" id="includeInactive" /> Include Inactive Users</label><br />
+        <label><input type="checkbox" id="includeRecommendations" /> Include Recommendations for Lecturer</label><br /><br />
         <button id="generateReportBtn">Generate PDF</button>
         <button id="cancelReportBtn">Cancel</button>
       </div>
