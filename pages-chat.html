@@ -46,7 +46,7 @@
     ======================================================== -->
   </head>
 
-  <body>
+  <body data-protected="true">
     <!-- ======= Header ======= -->
     <header id="header" class="header fixed-top d-flex align-items-center">
       <div class="d-flex align-items-center justify-content-between">
@@ -64,7 +64,7 @@
               class="nav-link nav-profile d-flex align-items-center pe-0 show"
               href="#"
               data-bs-toggle="dropdown"
-              aria-expanded="true"
+              aria-expanded="false"
             >
               <img
                 src="assets/img/profile-img.jpg"
@@ -75,7 +75,7 @@
             ><!-- End Profile Iamge Icon -->
 
             <ul
-              class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile show"
+              class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile"
               style="
                 position: absolute;
                 inset: 0px 0px auto auto;
@@ -85,7 +85,7 @@
               data-popper-placement="bottom-end"
             >
               <li class="dropdown-header">
-                <h6 id="fullname" class="user-name">Guest</h6>
+                <h6 id="fullname" class="user-name"></h6>
               </li>
               <li>
                 <hr class="dropdown-divider" />
@@ -248,7 +248,15 @@
     <script src="assets/vendor/php-email-form/validate.js"></script>
     <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1360.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aws-amplify/5.1.0/amplify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <!-- Template Main JS File -->
     <script type="module" src="assets/js/main.js"></script>
+
+    <!-- Chat Access Guard -->
+    <script type="module">
+      import { checkBioBeforeChat } from "./assets/js/chat.js";
+      checkBioBeforeChat();
+    </script>
   </body>
 </html>
