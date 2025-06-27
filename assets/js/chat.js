@@ -1,5 +1,6 @@
 import { parseJwt, isTokenValid, redirectToCognito } from "./auth.js";
 import { escapeHTML } from "./utils.js";
+import { marked } from "https://cdn.jsdelivr.net/npm/marked/+esm";
 
 // Ensures chat access only for logged-in users with filled About field
 export async function checkBioBeforeChat() {
@@ -75,10 +76,20 @@ export function initChat() {
     return;
   }
 
+
+  // ✅ Enhanced message renderer with markdown support for GPT (api) responses
   function addMessage(content, sender = "user") {
     const message = document.createElement("div");
     message.className = `message ${sender}`;
-    message.innerHTML = escapeHTML(content).replace(/\n/g, "<br>");
+
+    // GPT replies in markdown format → render using marked.js
+    const rendered =
+      sender === "api"
+        ? marked.parse(content)
+        : escapeHTML(content).replace(/\n/g, "<br>");
+
+    message.innerHTML = rendered;
+
     chatWindow.appendChild(message);
     chatWindow.scrollTop = chatWindow.scrollHeight;
   }

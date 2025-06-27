@@ -153,17 +153,19 @@
         <!-- End Chat Page Nav -->
 
         <li class="nav-item teacher-nav">
-          <a class="nav-link" href="pages-teacher.html">
-            <i class="bi bi-envelope"></i>
-            <span>Teacher</span>
+          <a class="nav-link" href="#" id="lecturerReportLink">
+            <i class="bi bi-list"></i>
+            <span>Lecturer Report</span>
           </a>
         </li>
         <!-- End Teacher Page Nav -->
         <script>
           // Check if 'teacher' is in sessionStorage.getItem('groups')
-          let groups = sessionStorage.getItem("groups") || ""; // Ensure it's a string
-          if (!groups.includes("teachers")) {
-            document.querySelector(".teacher-nav").style.display = "none"; // Hide the element
+          let groups = sessionStorage.getItem("groups") || ""; // מחרוזת של קבוצות מה-JWT
+          if (!groups.includes("Teachers")) {                  // ← כאן מסתתרות התפריטים
+            document.querySelectorAll(".teacher-nav").forEach(el => {
+              el.style.display = "none";
+            });
           }
         </script>
 
@@ -279,7 +281,26 @@
     <script src="assets/vendor/php-email-form/validate.js"></script>
     <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1360.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/amazon-cognito-identity-js/5.2.5/amazon-cognito-identity.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <script type="module" src="assets/js/lecturer-report.js"></script>
+
+
     <!-- Template Main JS File -->
     <script type="module" src="assets/js/main.js"></script>
+
+    <!-- Lecturer Report Modal -->
+    <div id="lecturerReportModal" style="display: none; position: fixed; z-index: 1000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center;">
+      <div style="background: white; padding: 20px; border-radius: 10px; width: 420px; max-width: 90%; box-shadow: 0 0 10px rgba(0,0,0,0.3);">
+        <h3>Generate Lecturer Report</h3>
+        <label>Start Date: <input type="date" id="reportStartDate" /></label><br /><br />
+        <label>End Date: <input type="date" id="reportEndDate" /></label><br /><br />
+        <label><input type="checkbox" id="includeTop5" /> Include Top 5</label><br />
+        <label><input type="checkbox" id="includeInactive" /> Include Inactive Users</label><br />
+        <label><input type="checkbox" id="includeRecommendations" /> Include Recommendations for Lecturer</label><br /><br />
+        <button id="generateReportBtn">Generate PDF</button>
+        <button id="cancelReportBtn">Cancel</button>
+      </div>
+    </div>
+
   </body>
 </html>
