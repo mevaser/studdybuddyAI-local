@@ -98,7 +98,9 @@ export function saveTokens(userId, tokens) {
     return;
   }
   if (tokens.id_token) {
-   sessionStorage.setItem(`idToken_${userId}`, tokens.id_token);
+    sessionStorage.setItem(`idToken_${userId}`, tokens.id_token);
+    sessionStorage.setItem("groups", getUserGroupsFromToken(tokens.id_token));
+
 
     // Extract user info
     const decodedToken = parseJwt(tokens.id_token);
@@ -123,7 +125,7 @@ export function saveTokens(userId, tokens) {
     console.log("Saved ID token and user info");
   }
   if (tokens.access_token) {
-            // שמור את ה־access token
+      // שמור את ה־access token
       sessionStorage.setItem(`accessToken_${userId}`, tokens.access_token);
 
       // שלוף ממנו את הקבוצות
@@ -132,6 +134,7 @@ export function saveTokens(userId, tokens) {
 
       // שמור כמחרוזת ב־sessionStorage
       sessionStorage.setItem("groups", groupsArray.join(","));
+      console.log("Saved access token");
   }
   if (tokens.refresh_token) {
     sessionStorage.setItem(`refreshToken_${userId}`, tokens.refresh_token);
@@ -162,6 +165,7 @@ export function clearTokens(userId) {
   sessionStorage.removeItem("userData");
   sessionStorage.clear(); // Full session reset
 }
+
 
 export function getUserGroupsFromToken(token) {
   if (!token) return [];

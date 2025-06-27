@@ -52,6 +52,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Update authentication buttons
   auth.updateAuthButton();
 
+
   // Attach event listener for the profile dropdown to ensure sign-out button is updated
   const profileDropdown = document.querySelector(".nav-profile");
   if (profileDropdown) {
@@ -100,6 +101,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       await profile.loadProfileFromDynamo(
         userEmail.toLowerCase()
       );
+
       console.log("✅ Profile loaded successfully.");
       profile.updateUserNameOnPage();
     } catch (error) {
@@ -108,9 +110,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // Attach event listener to chat link for profile verification before access
+
   const chatLink = document.querySelector(
     'a[href="pages-chat.html"]'
   );
+
   if (chatLink) {
     chatLink.addEventListener("click", (event) => {
       event.preventDefault();
@@ -130,6 +134,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const saveChangesBtn = document.getElementById(
     "saveChangesBtn"
   );
+
   if (saveChangesBtn) {
     saveChangesBtn.addEventListener("click", async (event) => {
       event.preventDefault();
@@ -171,14 +176,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             linkedin: updatedLinkedin,
           }),
         });
+        
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
+
         const result = await response.json();
         console.log("✅ Profile update response:", result);
         if (response.ok) {
           alert("✅ Profile updated successfully!");
-          await profile.loadProfileFromDynamo(userEmail);
+
+          await profile.loadProfileFromDynamo(userEmail); // reload & update everything
+
           profile.updateUserNameOnPage();
         } else {
           alert(
@@ -196,5 +205,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   setTimeout(() => {
     ui.initEChartsResize();
   }, 200);
+
   console.log("🎉 Initialization completed!");
 });
