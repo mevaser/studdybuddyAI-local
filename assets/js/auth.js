@@ -101,6 +101,7 @@ export function saveTokens(userId, tokens) {
     sessionStorage.setItem(`idToken_${userId}`, tokens.id_token);
     sessionStorage.setItem("groups", getUserGroupsFromToken(tokens.id_token));
 
+
     // Extract user info
     const decodedToken = parseJwt(tokens.id_token);
     if (decodedToken) {
@@ -124,8 +125,16 @@ export function saveTokens(userId, tokens) {
     console.log("Saved ID token and user info");
   }
   if (tokens.access_token) {
-    sessionStorage.setItem(`accessToken_${userId}`, tokens.access_token);
-    console.log("Saved access token");
+      // שמור את ה־access token
+      sessionStorage.setItem(`accessToken_${userId}`, tokens.access_token);
+
+      // שלוף ממנו את הקבוצות
+      const groupsArray = getUserGroupsFromToken(tokens.access_token);
+      console.log("▶️ Parsed groups from access_token:", groupsArray);
+
+      // שמור כמחרוזת ב־sessionStorage
+      sessionStorage.setItem("groups", groupsArray.join(","));
+      console.log("Saved access token");
   }
   if (tokens.refresh_token) {
     sessionStorage.setItem(`refreshToken_${userId}`, tokens.refresh_token);
@@ -157,10 +166,13 @@ export function clearTokens(userId) {
   sessionStorage.clear(); // Full session reset
 }
 
-export function getUserGroupsFromToken(idToken) {
-  if (!idToken) return null;
-  const decodedToken = parseJwt(idToken);
-  return decodedToken ? decodedToken["cognito:groups"] || null : null;
+
+export function getUserGroupsFromToken(token) {
+  if (!token) return [];
+  const payload = parseJwt(token);
+  if (!payload) return [];
+  const groups = payload["cognito:groups"];
+  return Array.isArray(groups) ? groups : [];
 }
 
 //
@@ -310,6 +322,8 @@ export async function handleOAuthLogin(userId = "defaultUser") {
 
       // 3) Remove "?code=..." from the URL (so it doesn't linger in the address bar)
       window.history.replaceState({}, document.title, window.location.pathname);
+
+      window.location.reload();
     }
 
     // 4) Now see if we have valid tokens in storage
