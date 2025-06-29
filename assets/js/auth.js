@@ -98,7 +98,7 @@ export function saveTokens(userId, tokens) {
     return;
   }
   if (tokens.id_token) {
-   sessionStorage.setItem(`idToken_${userId}`, tokens.id_token);
+    sessionStorage.setItem(`idToken_${userId}`, tokens.id_token);
 
     // Extract user info
     const decodedToken = parseJwt(tokens.id_token);
@@ -123,15 +123,15 @@ export function saveTokens(userId, tokens) {
     console.log("Saved ID token and user info");
   }
   if (tokens.access_token) {
-            // שמור את ה־access token
-      sessionStorage.setItem(`accessToken_${userId}`, tokens.access_token);
+    // Save access token
+    sessionStorage.setItem(`accessToken_${userId}`, tokens.access_token);
 
-      // שלוף ממנו את הקבוצות
-      const groupsArray = getUserGroupsFromToken(tokens.access_token);
-      console.log("▶️ Parsed groups from access_token:", groupsArray);
+    // Parse groups from access token
+    const groupsArray = getUserGroupsFromToken(tokens.access_token);
+    console.log("▶️ Parsed groups from access_token:", groupsArray);
 
-      // שמור כמחרוזת ב־sessionStorage
-      sessionStorage.setItem("groups", groupsArray.join(","));
+    // Save groups to sessionStorage
+    sessionStorage.setItem("groups", groupsArray.join(","));
   }
   if (tokens.refresh_token) {
     sessionStorage.setItem(`refreshToken_${userId}`, tokens.refresh_token);
@@ -321,6 +321,7 @@ export async function handleOAuthLogin(userId = "defaultUser") {
 
       window.location.reload();
     }
+    updateTeacherMenuVisibility();
 
     // 4) Now see if we have valid tokens in storage
     const tokens = getTokensFromStorage(userId);
@@ -332,6 +333,7 @@ export async function handleOAuthLogin(userId = "defaultUser") {
       const decodedToken = parseJwt(tokens.id_token);
       const userEmail = decodedToken?.email;
       const userName = decodedToken?.name || "Unknown User";
+      updateTeacherMenuVisibility();
       if (userEmail) {
         console.log("📩 Attempting to update user profile in DynamoDB...");
         updateUserProfileAfterLogin(userEmail);
@@ -372,4 +374,14 @@ export function handleLoginFlow() {
       console.error("❌ handleLoginFlow error:", err);
       redirectToCognito();
     });
+}
+
+// Update the visibility of teacher-specific menu items
+export function updateTeacherMenuVisibility() {
+  const groupsString = sessionStorage.getItem("groups") || "";
+  const groups = groupsString.split(",");
+
+  document.querySelectorAll(".teacher-nav").forEach((el) => {
+    el.style.display = groups.includes("Teachers") ? "block" : "none";
+  });
 }

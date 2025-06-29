@@ -44,7 +44,7 @@
       <div class="d-flex align-items-center justify-content-between">
         <a href="index.html" class="logo d-flex align-items-center">
           <img
-            src="https://studybuddy-website.s3.us-east-1.amazonaws.com/studybuddy/assets/img/logo.png"
+            src="https://studybudybucket.s3.us-east-1.amazonaws.com/studdybuddyAI-local/assets/img/logo.png"
             alt="Logo"
           />
           <span class="d-none d-lg-block">StudyBuddy</span>
@@ -162,11 +162,7 @@
         <!-- End Teacher Page Nav -->
 
         <li class="nav-item">
-          <a
-            id="authButton"
-            class="nav-link collapsed"
-            href="https://us-east-1yfkzkrdrk.auth.us-east-1.amazoncognito.com/login?client_id=6q9dfaem3aaobkec9fs0p2n07e&redirect_uri=https://studybuddy-website.s3.us-east-1.amazonaws.com/studybuddy/index.html&response_type=token"
-          >
+          <a id="authButton" class="nav-link collapsed" href="#">
             <i class="bi bi-box-arrow-right"></i>
             <span>Login</span>
           </a>
@@ -213,15 +209,18 @@
           </div>
           <!-- End Students Count Card -->
 
-          <!-- Students List Table -->
+          <!-- 📋 Students List Section -->
           <div class="col-12">
             <div class="card">
               <div class="card-body">
                 <h5 class="card-title">Students List</h5>
-                <button class="btn btn-primary mb-3" onclick="addStudent()">
-                  Add Student
-                </button>
-                <table class="table table-striped" id="students-table">
+
+                <!-- Scrollable container for the table -->
+
+                <table
+                  class="table table-striped datatable"
+                  id="students-table"
+                >
                   <thead>
                     <tr>
                       <th>#</th>
@@ -233,76 +232,25 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <!-- Mock data rows will be added via JavaScript -->
+                    <!-- Student rows will be inserted dynamically via JavaScript -->
                   </tbody>
                 </table>
+
+                <!-- End of scrollable container -->
               </div>
             </div>
           </div>
-          <!-- End Students List Table -->
+          <!-- End of Students List Section -->
         </div>
       </section>
     </main>
     <!-- End Main Content -->
 
     <!-- Vendor JS Files -->
-    <script src="https://studybuddy-website.s3.us-east-1.amazonaws.com/studybuddy/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="https://studybudybucket.s3.us-east-1.amazonaws.com/studdybuddyAI-local/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Main JS File -->
-    <script>
-      async function fetchStudents() {
-        const apiUrl =
-          "https://18ygiad1a8.execute-api.us-east-1.amazonaws.com/dev/getAllStudents";
-
-        try {
-          const response = await fetch(apiUrl);
-          if (!response.ok) {
-            throw new Error(`API error: ${response.status}`);
-          }
-
-          const responseBody = await response.json();
-
-          let students = responseBody.body;
-          if (typeof students === "string") {
-            students = JSON.parse(students);
-          }
-
-          if (!Array.isArray(students)) {
-            throw new Error("API response is not an array");
-          }
-
-          const tableBody = document.querySelector("#students-table tbody");
-          tableBody.innerHTML = "";
-
-          students.forEach((student, index) => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${student.Name || "N/A"}</td>
-            <td>${student.Email || "N/A"}</td>
-            <td>${student.phone || "N/A"}</td>
-            <td>${student.Bio || "N/A"}</td>
-            <td><a href="${
-              student["linkedin profile"] || "#"
-            }" target="_blank">LinkedIn</a></td>
-            
-          `;
-            tableBody.appendChild(row);
-          });
-
-          document.getElementById("total-students").innerText = students.length;
-        } catch (error) {
-          console.error("Error fetching students:", error);
-        }
-      }
-
-      document.addEventListener("DOMContentLoaded", fetchStudents);
-
-      function viewStudentDetails(email) {
-        alert(`Details for student with email: ${email}`);
-      }
-    </script>
+    <script src="assets/vendor/simple-datatables/simple-datatables.js"></script>
+    <script type="module" src="assets/js/pages-teacher.js"></script>
     <script type="module" src="assets/js/main.js"></script>
   </body>
 </html>
