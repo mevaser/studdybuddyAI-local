@@ -183,66 +183,218 @@
           </ol>
         </nav>
       </div>
-      <!-- End Page Title -->
 
-      <section class="section dashboard">
-        <div class="row">
-          <!-- Students Count Card -->
-          <div class="col-lg-4 col-md-6">
-            <div class="card info-card">
-              <div class="card-body">
-                <h5 class="card-title">Students <span>| Total</span></h5>
-                <div class="d-flex align-items-center">
-                  <div
-                    class="card-icon rounded-circle d-flex align-items-center justify-content-center"
-                  >
-                    <i class="bi bi-people"></i>
+      <!-- Nav Tabs -->
+      <ul class="nav nav-tabs mb-4" id="teacherTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link active"
+            id="students-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#students-pane"
+            type="button"
+            role="tab"
+          >
+            Students
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="stats-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#stats-pane"
+            type="button"
+            role="tab"
+          >
+            Stats
+          </button>
+        </li>
+      </ul>
+
+      <!-- Tab Panes -->
+      <div class="tab-content" id="teacherTabsContent">
+        <!-- Students Pane -->
+        <div
+          class="tab-pane fade show active"
+          id="students-pane"
+          role="tabpanel"
+        >
+          <section class="section dashboard">
+            <div class="row">
+              <!-- Students Count Card -->
+              <div class="col-lg-4 col-md-6">
+                <div class="card info-card">
+                  <div class="card-body">
+                    <h5 class="card-title">Students <span>| Total</span></h5>
+                    <div class="d-flex align-items-center">
+                      <div
+                        class="card-icon rounded-circle d-flex align-items-center justify-content-center"
+                      >
+                        <i class="bi bi-people"></i>
+                      </div>
+                      <div class="ps-3">
+                        <h6 id="total-students"></h6>
+                        <span class="text-success small pt-1 fw-bold">+0%</span>
+                        <span class="text-muted small pt-2 ps-1">increase</span>
+                      </div>
+                    </div>
                   </div>
-                  <div class="ps-3">
-                    <h6 id="total-students"></h6>
-                    <span class="text-success small pt-1 fw-bold">+0%</span>
-                    <span class="text-muted small pt-2 ps-1">increase</span>
+                </div>
+              </div>
+
+              <!-- Students List Table -->
+              <div class="col-12">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Students List</h5>
+                    <div class="table-responsive">
+                      <table
+                        class="table table-striped datatable"
+                        id="students-table"
+                      >
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Bio</th>
+                            <th>LinkedIn</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <!-- JavaScript will populate rows -->
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          <!-- End Students Count Card -->
+          </section>
+        </div>
 
-          <!-- 📋 Students List Section -->
-          <div class="col-12">
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Students List</h5>
-
-                <!-- Scrollable container for the table -->
-
-                <table
-                  class="table table-striped datatable"
-                  id="students-table"
-                >
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Phone</th>
-                      <th>Bio</th>
-                      <th>LinkedIn</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <!-- Student rows will be inserted dynamically via JavaScript -->
-                  </tbody>
-                </table>
-
-                <!-- End of scrollable container -->
+        <!-- Stats Pane -->
+        <div class="tab-pane fade" id="stats-pane" role="tabpanel">
+          <section class="section dashboard">
+            <!-- 📅 Date Range Selector -->
+            <div class="row mb-3">
+              <div class="col-md-3">
+                <label for="start-date" class="form-label">Start Date</label>
+                <input type="date" id="start-date" class="form-control" />
+              </div>
+              <div class="col-md-3">
+                <label for="end-date" class="form-label">End Date</label>
+                <input type="date" id="end-date" class="form-control" />
+              </div>
+              <div class="col-md-3 d-flex align-items-end">
+                <button id="load-stats" class="btn btn-primary w-100">
+                  Load Stats
+                </button>
               </div>
             </div>
-          </div>
-          <!-- End of Students List Section -->
+
+            <!-- ✅ Optional Filters -->
+            <div class="row mb-4">
+              <div class="col-md-3">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="includeTop5"
+                    checked
+                  />
+                  <label class="form-check-label" for="includeTop5">
+                    Include Top 5
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="includeInactive"
+                    checked
+                  />
+                  <label class="form-check-label" for="includeInactive">
+                    Include Inactive Users
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="includeRecommendations"
+                    checked
+                  />
+                  <label class="form-check-label" for="includeRecommendations">
+                    Include Recommendations for Lecturer
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- 📊 Charts & Insights -->
+            <div class="row">
+              <!-- Top Topics per Course -->
+              <div class="col-lg-6 mb-4">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Top Topics per Course</h5>
+                    <canvas id="chart-topics" height="200"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Frequent Questions -->
+              <div class="col-lg-6 mb-4">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Frequent Questions</h5>
+                    <canvas id="chart-frequent-questions" height="200"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Top 5 Students -->
+              <div class="col-lg-6 mb-4 d-none" id="card-top5">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Top 5 Students</h5>
+                    <canvas id="chart-top5" height="200"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Inactive Users -->
+              <div class="col-lg-6 mb-4 d-none" id="card-inactive">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">
+                      Inactive Users (&lt; 5 Questions)
+                    </h5>
+                    <canvas id="chart-inactive" height="200"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Lecturer Recommendations -->
+              <div class="col-12 mb-4 d-none" id="card-recommendations">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Recommendations for Lecturer</h5>
+                    <pre
+                      id="recommendations-box"
+                      class="mt-2"
+                      style="white-space: pre-wrap"
+                    ></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
-      </section>
+      </div>
     </main>
     <!-- End Main Content -->
 
