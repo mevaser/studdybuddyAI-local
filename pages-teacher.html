@@ -336,12 +336,36 @@
 
             <!-- 📊 Charts & Insights -->
             <div class="row">
-              <!-- Top Topics per Course -->
+              <!-- Lecturer Recommendations -->
+              <div class="col-12 mb-4 d-none" id="card-recommendations">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Recommendations for Lecturer</h5>
+                    <pre
+                      id="recommendations-box"
+                      class="mt-2"
+                      style="white-space: pre-wrap"
+                    ></pre>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Networking Topics -->
               <div class="col-lg-6 mb-4">
                 <div class="card">
                   <div class="card-body">
-                    <h5 class="card-title">Top Topics per Course</h5>
-                    <canvas id="chart-topics" height="200"></canvas>
+                    <h5 class="card-title">Top Topics - Networking</h5>
+                    <canvas id="chart-topics-networking" height="200"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- C# Topics -->
+              <div class="col-lg-6 mb-4">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Top Topics - C#</h5>
+                    <canvas id="chart-topics-csharp" height="200"></canvas>
                   </div>
                 </div>
               </div>
@@ -374,20 +398,6 @@
                       Inactive Users (&lt; 5 Questions)
                     </h5>
                     <canvas id="chart-inactive" height="200"></canvas>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Lecturer Recommendations -->
-              <div class="col-12 mb-4 d-none" id="card-recommendations">
-                <div class="card">
-                  <div class="card-body">
-                    <h5 class="card-title">Recommendations for Lecturer</h5>
-                    <pre
-                      id="recommendations-box"
-                      class="mt-2"
-                      style="white-space: pre-wrap"
-                    ></pre>
                   </div>
                 </div>
               </div>

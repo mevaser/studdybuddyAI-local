@@ -114,7 +114,7 @@ async function loadLecturerStats() {
 
     let result = await resp.json();
     if (typeof result === "string") {
-      result = JSON.parse(result); // אם השרת החזיר מחרוזת – נפרש ידנית
+      result = JSON.parse(result);
     } else if (typeof result.body === "string") {
       result = JSON.parse(result.body);
     } else if (typeof result.body === "object") {
@@ -123,98 +123,160 @@ async function loadLecturerStats() {
 
     console.log("📊 Raw LecturerReport result:", result);
 
-    // ✅ Top Topics per Course
     const topicsData = result.topTopicsPerCourse || {
       Networking: [],
       "C#": [],
     };
-    const topLabels = [];
-    const networking = [];
-    const csharp = [];
-    const allTopics = new Set();
 
-    topicsData.Networking.forEach(([topic, count]) => {
-      allTopics.add(topic);
-    });
-    topicsData["C#"].forEach(([topic, count]) => {
-      allTopics.add(topic);
-    });
-
-    allTopics.forEach((topic) => {
-      topLabels.push(topic);
-      const net = topicsData.Networking.find(([t]) => t === topic);
-      const csh = topicsData["C#"].find(([t]) => t === topic);
-      networking.push(net ? net[1] : 0);
-      csharp.push(csh ? csh[1] : 0);
-    });
-
-    destroyChart("chart-topics");
-    const ctxTopics = document.getElementById("chart-topics").getContext("2d");
-    activeCharts["chart-topics"] = new Chart(ctxTopics, {
+    // ✅ Top Topics – Networking
+    destroyChart("chart-topics-networking");
+    const ctxNetworking = document
+      .getElementById("chart-topics-networking")
+      .getContext("2d");
+    activeCharts["chart-topics-networking"] = new Chart(ctxNetworking, {
       type: "bar",
       data: {
-        labels: topLabels,
+        labels: topicsData.Networking.map(([t]) =>
+          t.length > 20 ? t.slice(0, 20) + "…" : t
+        ),
         datasets: [
-          { label: "Networking", data: networking },
-          { label: "C#", data: csharp },
+          {
+            label: "Networking",
+            data: topicsData.Networking.map(([_, count]) => count),
+          },
         ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: "bottom" },
+          tooltip: {
+            callbacks: {
+              title: function (context) {
+                const index = context[0].dataIndex;
+                return topicsData.Networking[index][0];
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // ✅ Top Topics – C#
+    destroyChart("chart-topics-csharp");
+    const ctxCsharp = document
+      .getElementById("chart-topics-csharp")
+      .getContext("2d");
+    activeCharts["chart-topics-csharp"] = new Chart(ctxCsharp, {
+      type: "bar",
+      data: {
+        labels: topicsData["C#"].map(([t]) =>
+          t.length > 20 ? t.slice(0, 20) + "…" : t
+        ),
+        datasets: [
+          {
+            label: "C#",
+            data: topicsData["C#"].map(([_, count]) => count),
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: "bottom" },
+          tooltip: {
+            callbacks: {
+              title: function (context) {
+                const index = context[0].dataIndex;
+                return topicsData["C#"][index][0];
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // ✅ Frequent Questions
+    let fq = result.frequentQuestions || [];
+    while (fq.length < 5) fq.push({ question: "", count: 0 });
+
+    destroyChart("chart-frequent-questions");
+    const ctxFreq = document
+      .getElementById("chart-frequent-questions")
+      .getContext("2d");
+
+    activeCharts["chart-frequent-questions"] = new Chart(ctxFreq, {
+      type: "bar",
+      data: {
+        labels: fq.map(() => ""),
+        datasets: [
+          {
+            label: "Occurrences",
+            data: fq.map((x) => x.count),
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: "bottom" },
+          tooltip: {
+            callbacks: {
+              title: function (context) {
+                const index = context[0].dataIndex;
+                return fq[index].question || "N/A";
+              },
+            },
+          },
+        },
+        scales: {
+          x: { ticks: { display: false } },
+        },
+      },
+    });
+
+    // ✅ Top 5 Students
+    let top5 = result.top5 || [];
+    const cardTop5 = document.getElementById("card-top5");
+    while (top5.length < 5) top5.push({ name: "", count: 0 });
+
+    destroyChart("chart-top5");
+    const ctxTop5 = document.getElementById("chart-top5").getContext("2d");
+    activeCharts["chart-top5"] = new Chart(ctxTop5, {
+      type: "bar",
+      data: {
+        labels: top5.map((x) => x.name),
+        datasets: [{ label: "Questions", data: top5.map((x) => x.count) }],
       },
       options: {
         responsive: true,
         plugins: { legend: { position: "bottom" } },
       },
     });
-
-    // ✅ Frequent Questions
-    const fq = result.frequentQuestions;
-    destroyChart("chart-frequent-questions");
-    const ctxFreq = document
-      .getElementById("chart-frequent-questions")
-      .getContext("2d");
-    activeCharts["chart-frequent-questions"] = new Chart(ctxFreq, {
-      type: "bar",
-      data: {
-        labels: fq.map((x) => x.question),
-        datasets: [{ label: "Occurrences", data: fq.map((x) => x.count) }],
-      },
-    });
-
-    // ✅ Top 5 Students
-    const top5 = result.top5 || [];
-    const cardTop5 = document.getElementById("card-top5");
-    if (top5.length > 0) {
-      destroyChart("chart-top5");
-      const ctxTop5 = document.getElementById("chart-top5").getContext("2d");
-      activeCharts["chart-top5"] = new Chart(ctxTop5, {
-        type: "bar",
-        data: {
-          labels: top5.map((x) => x.name),
-          datasets: [{ label: "Questions", data: top5.map((x) => x.count) }],
-        },
-      });
-      cardTop5.classList.remove("d-none");
-    } else cardTop5.classList.add("d-none");
+    cardTop5.classList.remove("d-none");
 
     // ✅ Inactive Users
-    const inactive = result.inactiveUsers || [];
+    let inactive = result.inactiveUsers || [];
     const cardInactive = document.getElementById("card-inactive");
-    if (inactive.length > 0) {
-      destroyChart("chart-inactive");
-      const ctxInact = document
-        .getElementById("chart-inactive")
-        .getContext("2d");
-      activeCharts["chart-inactive"] = new Chart(ctxInact, {
-        type: "bar",
-        data: {
-          labels: inactive.map((x) => x.name),
-          datasets: [
-            { label: "Questions (<5)", data: inactive.map((x) => x.count) },
-          ],
-        },
-        options: { indexAxis: "y" },
-      });
-      cardInactive.classList.remove("d-none");
-    } else cardInactive.classList.add("d-none");
+    while (inactive.length < 5) inactive.push({ name: "", count: 0 });
+
+    destroyChart("chart-inactive");
+    const ctxInact = document.getElementById("chart-inactive").getContext("2d");
+    activeCharts["chart-inactive"] = new Chart(ctxInact, {
+      type: "bar",
+      data: {
+        labels: inactive.map((x) => x.name),
+        datasets: [
+          { label: "Questions (<5)", data: inactive.map((x) => x.count) },
+        ],
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        plugins: { legend: { position: "bottom" } },
+      },
+    });
+    cardInactive.classList.remove("d-none");
 
     // ✅ Recommendations
     const recBox = document.getElementById("recommendations-box");
@@ -222,7 +284,9 @@ async function loadLecturerStats() {
     if (result.recommendations) {
       recBox.textContent = result.recommendations;
       recCard.classList.remove("d-none");
-    } else recCard.classList.add("d-none");
+    } else {
+      recCard.classList.add("d-none");
+    }
   } catch (err) {
     console.error("Failed to load lecturer stats:", err);
     alert("Error loading stats. See console.");
@@ -232,13 +296,10 @@ async function loadLecturerStats() {
 window.addEventListener("load", () => {
   fetchStudents();
 
-  // 📅 Set default date range: last 30 days
+  // 📅 Set default date range: from 01/04/2025 to today
   const today = new Date();
   const endDate = today.toISOString().split("T")[0];
-
-  const lastMonth = new Date(today);
-  lastMonth.setMonth(lastMonth.getMonth() - 1);
-  const startDate = lastMonth.toISOString().split("T")[0];
+  const startDate = "2025-04-01";
 
   document.getElementById("start-date").value = startDate;
   document.getElementById("end-date").value = endDate;
