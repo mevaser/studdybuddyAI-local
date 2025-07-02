@@ -1294,3 +1294,18 @@ button {
   text-align: left;
   margin-right: auto; /* Align GPT messages to the left */
 }
+
+.chart-container-scrollable {
+  width: 100%;
+  overflow-x: hidden; /* ❌ disables horizontal scroll */
+  overflow-y: hidden;
+  max-height: 600px;
+  padding-bottom: 16px;
+}
+
+.chart-container-scrollable canvas {
+  width: 100% !important; /* ✅ make canvas responsive */
+  height: 550px !important; /* fixed height */
+  max-height: 600px;
+  min-width: unset !important; /* ❌ disable any forced minimum */
+}

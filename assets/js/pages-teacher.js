@@ -204,17 +204,11 @@ async function loadLecturerStats() {
     const ctxFreq = document
       .getElementById("chart-frequent-questions")
       .getContext("2d");
-
     activeCharts["chart-frequent-questions"] = new Chart(ctxFreq, {
       type: "bar",
       data: {
         labels: fq.map(() => ""),
-        datasets: [
-          {
-            label: "Occurrences",
-            data: fq.map((x) => x.count),
-          },
-        ],
+        datasets: [{ label: "Occurrences", data: fq.map((x) => x.count) }],
       },
       options: {
         responsive: true,
@@ -229,9 +223,7 @@ async function loadLecturerStats() {
             },
           },
         },
-        scales: {
-          x: { ticks: { display: false } },
-        },
+        scales: { x: { ticks: { display: false } } },
       },
     });
 
@@ -277,6 +269,114 @@ async function loadLecturerStats() {
       },
     });
     cardInactive.classList.remove("d-none");
+
+    // ✅ Topic Breakdown: Top 5 topics with their top 7 subtopics + "Other" subtopic per topic
+    destroyChart("chart-breakdown");
+    const breakdownData = result.topicSubtopicBreakdown || {};
+
+    // Step 1: Calculate total occurrences per topic
+    const topicTotals = Object.entries(breakdownData).map(([topic, subs]) => ({
+      topic,
+      total: Object.values(subs).reduce((sum, val) => sum + val, 0),
+    }));
+
+    // Step 2: Sort topics by volume and select top 5
+    topicTotals.sort((a, b) => b.total - a.total);
+    const topTopics = topicTotals.slice(0, 5).map((x) => x.topic);
+
+    // Step 3: Select top 7 subtopics per topic, and calculate "Other" count
+    const topicToTopSubs = {};
+    const topicToOtherCount = {};
+    topTopics.forEach((topic) => {
+      const subtopicCounts = Object.entries(breakdownData[topic] || {});
+      const sorted = subtopicCounts.sort((a, b) => b[1] - a[1]);
+
+      topicToTopSubs[topic] = sorted.slice(0, 7).map(([s]) => s);
+      topicToOtherCount[topic] = sorted
+        .slice(7)
+        .reduce((sum, [, count]) => sum + count, 0);
+    });
+
+    // Step 4: Build a list of all unique subtopics used across top topics
+    const allTopSubs = Array.from(
+      new Set(topTopics.flatMap((t) => topicToTopSubs[t]))
+    );
+
+    // Step 5: Define color palette and assign color to each subtopic
+    const chartColors = [
+      "#4dc9f6",
+      "#f67019",
+      "#f53794",
+      "#537bc4",
+      "#acc236",
+      "#166a8f",
+      "#00a950",
+      "#58595b",
+      "#8549ba",
+      "#e8c3b9",
+      "#c45850",
+      "#3cba9f",
+      "#ffcd56",
+      "#33b679",
+      "#ff6d00",
+      "#8e5ea2",
+      "#ff6384",
+      "#36a2eb",
+      "#cc65fe",
+      "#ffce56",
+    ];
+
+    let colorIndex = 0;
+    const datasets = allTopSubs.map((sub) => ({
+      label: sub,
+      data: topTopics.map((topic) =>
+        topicToTopSubs[topic].includes(sub)
+          ? breakdownData[topic]?.[sub] || 0
+          : 0
+      ),
+      backgroundColor: chartColors[colorIndex++ % chartColors.length],
+      stack: "stack-1",
+    }));
+
+    // Step 6: Add "Other" dataset per topic (in gray)
+    datasets.push({
+      label: "Other",
+      data: topTopics.map((topic) => topicToOtherCount[topic] || 0),
+      backgroundColor: "#cccccc",
+      stack: "stack-1",
+    });
+
+    // Step 7: Render chart
+    const ctxBreak = document
+      .getElementById("chart-breakdown")
+      .getContext("2d");
+    activeCharts["chart-breakdown"] = new Chart(ctxBreak, {
+      type: "bar",
+      data: {
+        labels: topTopics,
+        datasets: datasets,
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: {
+              boxWidth: 14,
+              padding: 8,
+            },
+          },
+          tooltip: {
+            mode: "index",
+            intersect: false,
+          },
+        },
+        scales: {
+          x: { stacked: true },
+          y: { stacked: true },
+        },
+      },
+    });
 
     // ✅ Recommendations
     const recBox = document.getElementById("recommendations-box");
