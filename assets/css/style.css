@@ -1301,6 +1301,7 @@ button {
   overflow-y: hidden;
   max-height: 600px;
   padding-bottom: 16px;
+  position: relative;
 }
 
 .chart-container-scrollable canvas {
@@ -1308,4 +1309,78 @@ button {
   height: 550px !important; /* fixed height */
   max-height: 600px;
   min-width: unset !important; /* ❌ disable any forced minimum */
+}
+
+/*--------------------------------------------------------------
+# Legend Popup
+--------------------------------------------------------------*/
+#legendPopup {
+  display: none;
+  position: fixed;
+  top: 38px; /* גובה מהכפתור */
+  right: 0;
+  z-index: 99999;
+  background: #fff;
+  border: 1px solid #ddd;
+  max-width: 420px;
+  max-height: 250px;
+  overflow: auto;
+  padding: 10px;
+  box-shadow: 0 2px 8px #bbb;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 13px;
+}
+#legendPopup b {
+  font-size: 14px;
+}
+#legendPopup .legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  margin-right: 7px;
+  display: inline-block;
+  vertical-align: middle;
+}
+#legendPopup .legend-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 3px;
+}
+
+/* Loader overlay for stats panel */
+#loader.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 32px 0 18px 0;
+  min-height: 90px;
+  background: transparent;
+}
+
+#loader .loader-spinner {
+  border: 6px solid #eaeaea;
+  border-top: 6px solid #347cff;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  animation: spin 1.2s linear infinite;
+  margin-bottom: 8px;
+}
+
+#loader .loader-text {
+  font-size: 1.12rem;
+  color: #444;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

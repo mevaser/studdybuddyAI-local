@@ -3,59 +3,133 @@
 let dataTable;
 let activeCharts = {};
 
-// 🔄 Reset chart helper
-function destroyChart(id) {
+// Helper: Destroy existing chart
+const destroyChart = (id) => {
   if (activeCharts[id]) {
     activeCharts[id].destroy();
     delete activeCharts[id];
   }
+};
+
+// Helper: Split label into multiple lines by words
+function splitLabelByWords(label, wordsPerLine = 2) {
+  const words = label.split(" ");
+  let lines = [];
+  for (let i = 0; i < words.length; i += wordsPerLine) {
+    lines.push(words.slice(i, i + wordsPerLine).join(" "));
+  }
+  return lines;
 }
 
-/**
- * Fetches students from Lambda, renders them
- * into the table, and updates the total counter.
- */
+// Helper: Setup full legend popup for detailed breakdown
+// פונקציה ל־popup legend
+function setupFullLegendPopup(allSubtopics, colorMap, subtopicTotals) {
+  const legendBtn = document.getElementById("legendBtn");
+  const legendPopup = document.getElementById("legendPopup");
+  if (!legendBtn || !legendPopup) return;
+
+  function positionPopup() {
+    const rect = legendBtn.getBoundingClientRect();
+    legendPopup.style.top = rect.bottom + 8 + "px"; // 8px below button
+    // Try to keep within screen:
+    let left = rect.left;
+    if (left + legendPopup.offsetWidth > window.innerWidth - 16) {
+      left = window.innerWidth - legendPopup.offsetWidth - 16;
+    }
+    legendPopup.style.left = left + "px";
+    legendPopup.style.right = "auto";
+  }
+
+  legendBtn.onclick = function (e) {
+    e.stopPropagation();
+    const legendHtml = allSubtopics
+      .sort((a, b) => subtopicTotals[b] - subtopicTotals[a])
+      .map(
+        (sub) =>
+          `<div class="legend-row">
+            <span class="legend-color" style="background:${
+              colorMap[sub] || "#eee"
+            }"></span>
+            <span>${sub}</span>
+            <span style="color:#888; font-size:11px; margin-left:8px;">(${
+              subtopicTotals[sub]
+            })</span>
+          </div>`
+      )
+      .join("");
+    legendPopup.innerHTML = legendHtml;
+    legendPopup.style.display =
+      legendPopup.style.display === "block" ? "none" : "block";
+    if (legendPopup.style.display === "block") {
+      positionPopup();
+      // Stay positioned when scrolling/resizing
+      window.addEventListener("scroll", positionPopup);
+      window.addEventListener("resize", positionPopup);
+    } else {
+      window.removeEventListener("scroll", positionPopup);
+      window.removeEventListener("resize", positionPopup);
+    }
+    // Hide on click outside
+    document.addEventListener("click", function docListener(ev) {
+      if (!legendPopup.contains(ev.target) && ev.target !== legendBtn) {
+        legendPopup.style.display = "none";
+        window.removeEventListener("scroll", positionPopup);
+        window.removeEventListener("resize", positionPopup);
+        document.removeEventListener("click", docListener);
+      }
+    });
+  };
+}
+
+// Helper: Show error messages clearly
+const showError = (msg) => {
+  const errorBox = document.getElementById("error-box");
+  errorBox.textContent = msg;
+  errorBox.style.display = "block";
+};
+
+// Helper: Hide error messages
+const hideError = () => {
+  const errorBox = document.getElementById("error-box");
+  errorBox.style.display = "none";
+};
+
+// Helper: Toggle loading spinner
+function toggleLoader(show) {
+  const loader = document.getElementById("loader");
+  loader.hidden = !show;
+  // Optionally hide other stats content while loading
+  document.querySelectorAll(".stats-content").forEach((el) => {
+    el.hidden = show;
+  });
+}
+
+// Fetch students and render table
 async function fetchStudents() {
-  let table = document.getElementById("students-table");
-  if (!table) {
-    console.debug("📋 #students-table not found, trying .datatable selector…");
-    table = document.querySelector("table.datatable");
-  }
-
+  const table = document.querySelector("#students-table");
   const totalEl = document.getElementById("total-students");
+  const tbody =
+    table.querySelector("tbody") ||
+    table.appendChild(document.createElement("tbody"));
 
-  if (!table || !totalEl) {
-    console.warn("⚠️ Table or total counter not found—skipping student fetch.");
-    return;
-  }
-
-  let tbody = table.querySelector("tbody");
-  if (!tbody) {
-    console.debug("🛠️ <tbody> missing—creating one.");
-    tbody = document.createElement("tbody");
-    table.appendChild(tbody);
-  }
-
-  const apiUrl =
-    "https://18ygiad1a8.execute-api.us-east-1.amazonaws.com/dev/getAllStudents";
+  toggleLoader(true);
+  hideError();
 
   try {
-    const resp = await fetch(apiUrl);
+    const resp = await fetch(
+      "https://18ygiad1a8.execute-api.us-east-1.amazonaws.com/dev/getAllStudents"
+    );
     if (!resp.ok) throw new Error(`API error ${resp.status}`);
 
     const payload = await resp.json();
-    let students = Array.isArray(payload)
+    const students = Array.isArray(payload)
       ? payload
-      : typeof payload.body === "string"
-      ? JSON.parse(payload.body)
-      : payload.body;
-    if (!Array.isArray(students))
-      throw new Error("Expected an array of students");
+      : JSON.parse(payload.body || payload);
 
-    tbody.innerHTML = "";
-    students.forEach((s, i) => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
+    tbody.innerHTML = students
+      .map(
+        (s, i) => `
+      <tr>
         <td>${i + 1}</td>
         <td>${s.Name || "N/A"}</td>
         <td>${s.Email || "N/A"}</td>
@@ -66,9 +140,10 @@ async function fetchStudents() {
             ? `<a href="${s["linkedin profile"]}" target="_blank">LinkedIn</a>`
             : "N/A"
         }</td>
-      `;
-      tbody.appendChild(tr);
-    });
+      </tr>
+    `
+      )
+      .join("");
 
     if (dataTable) dataTable.destroy();
     dataTable = new simpleDatatables.DataTable(table, {
@@ -77,338 +152,381 @@ async function fetchStudents() {
 
     totalEl.textContent = students.length;
   } catch (err) {
-    console.error("Error fetching students:", err);
+    console.error(err);
+    showError("Unable to load students. Please try again later.");
+  } finally {
+    toggleLoader(false);
   }
 }
 
-/**
- * Load lecturer stats and render charts based on selected filters.
- */
+// Render a bar chart given data
+function renderBarChart(chartId, labels, values, label, indexAxis = "x") {
+  destroyChart(chartId);
+  const ctx = document.getElementById(chartId).getContext("2d");
+
+  activeCharts[chartId] = new Chart(ctx, {
+    type: "bar",
+    data: { labels, datasets: [{ label, data: values }] },
+    options: {
+      indexAxis,
+      responsive: true,
+      plugins: { legend: { position: "bottom" } },
+    },
+  });
+}
+
+// Render a line chart
+function renderLineChart(chartId, labels, data) {
+  destroyChart(chartId);
+  const ctx = document.getElementById(chartId).getContext("2d");
+
+  activeCharts[chartId] = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          data,
+          borderWidth: 2,
+          tension: 0.3,
+          fill: false,
+          borderColor: "rgba(54, 162, 235, 1)",
+          pointRadius: 4,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { x: { ticks: { maxRotation: 45 } }, y: { beginAtZero: true } },
+    },
+  });
+}
+
+// Render frequent questions chart
+function renderFrequentQuestionsChart(chartId, frequentQuestions) {
+  destroyChart(chartId);
+  const ctx = document.getElementById(chartId).getContext("2d");
+
+  activeCharts[chartId] = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: frequentQuestions.map(() => ""), // Hide labels completely
+      datasets: [
+        {
+          label: "Occurrences",
+          data: frequentQuestions.map((q) => q.count),
+          backgroundColor: "#90caf9",
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "bottom" },
+        tooltip: {
+          callbacks: {
+            title: (context) =>
+              frequentQuestions[context[0].dataIndex].question || "N/A",
+          },
+        },
+      },
+      scales: { x: { ticks: { display: false } } }, // Hide ticks explicitly
+    },
+  });
+}
+
+function renderQuestionsOverTimeByStudentChart(
+  studentData,
+  chartId = "studentChart"
+) {
+  destroyChart(chartId);
+  const ctx = document.getElementById(chartId).getContext("2d");
+  const labels = studentData.map((d) => d.date);
+  const data = studentData.map((d) => d.count);
+
+  activeCharts[chartId] = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Questions",
+          data,
+          borderWidth: 2,
+          tension: 0.3,
+          fill: false,
+          borderColor: "rgba(255, 99, 132, 1)",
+          pointRadius: 4,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { maxRotation: 45, minRotation: 45 } },
+        y: { beginAtZero: true },
+      },
+    },
+  });
+}
+
+// Render topic breakdown chart as a stacked bar (only top 7 subtopics overall + "Other" in legend)
+function renderTopicBreakdownChart(chartId, breakdownData) {
+  destroyChart(chartId);
+  const ctx = document.getElementById(chartId).getContext("2d");
+
+  // Step 1: Top 5 topics with most questions
+  const topics = Object.entries(breakdownData)
+    .map(([topic, subtopics]) => ({
+      topic,
+      total: Object.values(subtopics).reduce((sum, val) => sum + val, 0),
+    }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 5)
+    .map((x) => x.topic);
+
+  // Step 2: For each topic, get its top 7 subtopics, others to "Other"
+  const subtopicSet = new Set();
+  const topicToTopSubs = {};
+  const topicToOtherCount = {};
+  topics.forEach((topic) => {
+    const subtopicCounts = Object.entries(breakdownData[topic] || {}).sort(
+      (a, b) => b[1] - a[1]
+    );
+    const topSubs = subtopicCounts.slice(0, 7).map(([sub]) => sub);
+    topSubs.forEach((sub) => subtopicSet.add(sub));
+    topicToTopSubs[topic] = topSubs;
+    topicToOtherCount[topic] = subtopicCounts
+      .slice(7)
+      .reduce((sum, [, count]) => sum + count, 0);
+  });
+  const allTopSubs = Array.from(subtopicSet);
+
+  // Step 3: Calculate totals per subtopic (for legend and popup)
+  const subtopicTotals = {};
+  topics.forEach((topic) => {
+    Object.entries(breakdownData[topic] || {}).forEach(([sub, count]) => {
+      subtopicTotals[sub] = (subtopicTotals[sub] || 0) + count;
+    });
+  });
+
+  // Step 4: Select the 10 most common subtopics overall for the legend
+  const legendSubs = Object.entries(subtopicTotals)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([sub]) => sub);
+
+  // Step 5: Assign colors, reusing palette if needed
+  const palette = [
+    "#4dc9f6",
+    "#f67019",
+    "#f53794",
+    "#537bc4",
+    "#acc236",
+    "#166a8f",
+    "#00a950",
+    "#58595b",
+    "#8549ba",
+    "#e8c3b9",
+    "#d4a6c8",
+    "#c6e377",
+    "#ffd166",
+    "#33b679",
+    "#ff6d00",
+  ];
+  const colorMap = {};
+  allTopSubs.forEach((sub, i) => (colorMap[sub] = palette[i % palette.length]));
+  colorMap["Other"] = "#cccccc";
+
+  // Step 6: Datasets for each unique subtopic (if in any top7)
+  const datasets = allTopSubs.map((sub, i) => ({
+    label: sub,
+    data: topics.map((topic) =>
+      topicToTopSubs[topic].includes(sub) ? breakdownData[topic][sub] || 0 : 0
+    ),
+    backgroundColor: colorMap[sub],
+    stack: "stack-1",
+  }));
+  // Add "Other"
+  datasets.push({
+    label: "Other",
+    data: topics.map((topic) => topicToOtherCount[topic] || 0),
+    backgroundColor: "#cccccc",
+    stack: "stack-1",
+  });
+
+  // Step 7: Render the chart, legend shows only top 10 most common subtopics (and "Other")
+  activeCharts[chartId] = new Chart(ctx, {
+    type: "bar",
+    data: { labels: topics, datasets },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: {
+            boxWidth: 14,
+            padding: 8,
+            font: { size: 10 },
+            // Only show top 10 + "Other" in legend under chart
+            filter: function (legendItem, chartData) {
+              return (
+                legendSubs.includes(legendItem.text) ||
+                legendItem.text === "Other"
+              );
+            },
+          },
+        },
+        tooltip: {
+          mode: "index",
+          intersect: false,
+          filter: function (tooltipItem) {
+            // Show only bars with value > 0 (or change to >1 או מה שתרצה)
+            return tooltipItem.raw > 0;
+          },
+        },
+      },
+      scales: { x: { stacked: true }, y: { stacked: true } },
+    },
+  });
+
+  // Step 8: Full legend popup with all subtopics and totals
+  const allSubtopics = Object.keys(subtopicTotals);
+  allSubtopics.forEach((sub) => {
+    if (!colorMap[sub]) colorMap[sub] = "#eee";
+  });
+  setupFullLegendPopup(allSubtopics, colorMap, subtopicTotals);
+}
+
+// Load lecturer statistics from API
 async function loadLecturerStats() {
-  const start = document.getElementById("start-date").value;
-  const end = document.getElementById("end-date").value;
-  const includeTop5 = document.getElementById("includeTop5").checked;
-  const includeInactive = document.getElementById("includeInactive").checked;
-  const includeRecommendations = document.getElementById(
-    "includeRecommendations"
-  ).checked;
-
-  if (!start || !end) return alert("Please select both start and end dates.");
-
-  const apiUrl =
-    "https://18ygiad1a8.execute-api.us-east-1.amazonaws.com/dev/LecturerReport";
   const payload = {
-    startDate: start,
-    endDate: end,
-    includeTop5,
-    includeInactive,
-    includeRecommendations,
+    startDate: document.getElementById("start-date").value,
+    endDate: document.getElementById("end-date").value,
+    includeTop5: document.getElementById("includeTop5").checked,
+    includeInactive: document.getElementById("includeInactive").checked,
+    includeRecommendations: document.getElementById("includeRecommendations")
+      .checked,
   };
 
-  try {
-    const resp = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+  if (!payload.startDate || !payload.endDate) {
+    return alert("Please select both start and end dates.");
+  }
 
-    let result = await resp.json();
-    if (typeof result === "string") {
-      result = JSON.parse(result);
-    } else if (typeof result.body === "string") {
-      result = JSON.parse(result.body);
-    } else if (typeof result.body === "object") {
-      result = result.body;
+  toggleLoader(true);
+  hideError();
+
+  try {
+    const resp = await fetch(
+      "https://18ygiad1a8.execute-api.us-east-1.amazonaws.com/dev/LecturerReport",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }
+    );
+    const result = await resp.json();
+    const data = result.body ? JSON.parse(result.body) : result;
+
+    // אחרי שקיבלת data מה-API
+    const questionsByStudent = data.questionsOverTimeByStudent || {};
+    const studentSelect = document.getElementById("studentSelect");
+
+    // Populate dropdown
+    studentSelect.innerHTML = Object.keys(questionsByStudent)
+      .map((email) => `<option value="${email}">${email}</option>`)
+      .join("");
+
+    // Set default selection (prefer mevaser, fallback to first)
+    let defaultEmail = "mevaser1995@gmail.com";
+    if (!questionsByStudent[defaultEmail]) {
+      // fallback to first in list
+      defaultEmail = Object.keys(questionsByStudent)[0];
+    }
+    studentSelect.value = defaultEmail;
+
+    // Update the student chart when a new student is selected
+    function updateStudentChart() {
+      const selectedEmail = studentSelect.value;
+      const studentData = questionsByStudent[selectedEmail] || [];
+      renderQuestionsOverTimeByStudentChart(studentData, "studentChart");
     }
 
-    console.log("📊 Raw LecturerReport result:", result);
+    // Event Listener - רנדור דיפולטי והרנדור בעת שינוי
+    studentSelect.addEventListener("change", updateStudentChart);
+    updateStudentChart(); // Always show default selection on load
 
-    const topicsData = result.topTopicsPerCourse || {
-      Networking: [],
-      "C#": [],
-    };
-
-    // ✅ Top Topics – Networking
-    destroyChart("chart-topics-networking");
-    const ctxNetworking = document
-      .getElementById("chart-topics-networking")
-      .getContext("2d");
-    activeCharts["chart-topics-networking"] = new Chart(ctxNetworking, {
-      type: "bar",
-      data: {
-        labels: topicsData.Networking.map(([t]) =>
-          t.length > 20 ? t.slice(0, 20) + "…" : t
-        ),
-        datasets: [
-          {
-            label: "Networking",
-            data: topicsData.Networking.map(([_, count]) => count),
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: "bottom" },
-          tooltip: {
-            callbacks: {
-              title: function (context) {
-                const index = context[0].dataIndex;
-                return topicsData.Networking[index][0];
-              },
-            },
-          },
-        },
-      },
-    });
-
-    // ✅ Top Topics – C#
-    destroyChart("chart-topics-csharp");
-    const ctxCsharp = document
-      .getElementById("chart-topics-csharp")
-      .getContext("2d");
-    activeCharts["chart-topics-csharp"] = new Chart(ctxCsharp, {
-      type: "bar",
-      data: {
-        labels: topicsData["C#"].map(([t]) =>
-          t.length > 20 ? t.slice(0, 20) + "…" : t
-        ),
-        datasets: [
-          {
-            label: "C#",
-            data: topicsData["C#"].map(([_, count]) => count),
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: "bottom" },
-          tooltip: {
-            callbacks: {
-              title: function (context) {
-                const index = context[0].dataIndex;
-                return topicsData["C#"][index][0];
-              },
-            },
-          },
-        },
-      },
-    });
-
-    // ✅ Frequent Questions
-    let fq = result.frequentQuestions || [];
-    while (fq.length < 5) fq.push({ question: "", count: 0 });
-
-    destroyChart("chart-frequent-questions");
-    const ctxFreq = document
-      .getElementById("chart-frequent-questions")
-      .getContext("2d");
-    activeCharts["chart-frequent-questions"] = new Chart(ctxFreq, {
-      type: "bar",
-      data: {
-        labels: fq.map(() => ""),
-        datasets: [{ label: "Occurrences", data: fq.map((x) => x.count) }],
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: "bottom" },
-          tooltip: {
-            callbacks: {
-              title: function (context) {
-                const index = context[0].dataIndex;
-                return fq[index].question || "N/A";
-              },
-            },
-          },
-        },
-        scales: { x: { ticks: { display: false } } },
-      },
-    });
-
-    // ✅ Top 5 Students
-    let top5 = result.top5 || [];
-    const cardTop5 = document.getElementById("card-top5");
-    while (top5.length < 5) top5.push({ name: "", count: 0 });
-
-    destroyChart("chart-top5");
-    const ctxTop5 = document.getElementById("chart-top5").getContext("2d");
-    activeCharts["chart-top5"] = new Chart(ctxTop5, {
-      type: "bar",
-      data: {
-        labels: top5.map((x) => x.name),
-        datasets: [{ label: "Questions", data: top5.map((x) => x.count) }],
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { position: "bottom" } },
-      },
-    });
-    cardTop5.classList.remove("d-none");
-
-    // ✅ Inactive Users
-    let inactive = result.inactiveUsers || [];
-    const cardInactive = document.getElementById("card-inactive");
-    while (inactive.length < 5) inactive.push({ name: "", count: 0 });
-
-    destroyChart("chart-inactive");
-    const ctxInact = document.getElementById("chart-inactive").getContext("2d");
-    activeCharts["chart-inactive"] = new Chart(ctxInact, {
-      type: "bar",
-      data: {
-        labels: inactive.map((x) => x.name),
-        datasets: [
-          { label: "Questions (<5)", data: inactive.map((x) => x.count) },
-        ],
-      },
-      options: {
-        indexAxis: "y",
-        responsive: true,
-        plugins: { legend: { position: "bottom" } },
-      },
-    });
-    cardInactive.classList.remove("d-none");
-
-    // ✅ Topic Breakdown: Top 5 topics with their top 7 subtopics + "Other" subtopic per topic
-    destroyChart("chart-breakdown");
-    const breakdownData = result.topicSubtopicBreakdown || {};
-
-    // Step 1: Calculate total occurrences per topic
-    const topicTotals = Object.entries(breakdownData).map(([topic, subs]) => ({
-      topic,
-      total: Object.values(subs).reduce((sum, val) => sum + val, 0),
-    }));
-
-    // Step 2: Sort topics by volume and select top 5
-    topicTotals.sort((a, b) => b.total - a.total);
-    const topTopics = topicTotals.slice(0, 5).map((x) => x.topic);
-
-    // Step 3: Select top 7 subtopics per topic, and calculate "Other" count
-    const topicToTopSubs = {};
-    const topicToOtherCount = {};
-    topTopics.forEach((topic) => {
-      const subtopicCounts = Object.entries(breakdownData[topic] || {});
-      const sorted = subtopicCounts.sort((a, b) => b[1] - a[1]);
-
-      topicToTopSubs[topic] = sorted.slice(0, 7).map(([s]) => s);
-      topicToOtherCount[topic] = sorted
-        .slice(7)
-        .reduce((sum, [, count]) => sum + count, 0);
-    });
-
-    // Step 4: Build a list of all unique subtopics used across top topics
-    const allTopSubs = Array.from(
-      new Set(topTopics.flatMap((t) => topicToTopSubs[t]))
+    // Render charts
+    renderBarChart(
+      "chart-topics-networking",
+      data.topTopicsPerCourse.Networking.map((x) => splitLabelByWords(x[0], 2)),
+      data.topTopicsPerCourse.Networking.map((x) => x[1]),
+      "Networking"
+    );
+    renderBarChart(
+      "chart-topics-csharp",
+      data.topTopicsPerCourse["C#"].map((x) => splitLabelByWords(x[0], 2)),
+      data.topTopicsPerCourse["C#"].map((x) => x[1]),
+      "C#"
     );
 
-    // Step 5: Define color palette and assign color to each subtopic
-    const chartColors = [
-      "#4dc9f6",
-      "#f67019",
-      "#f53794",
-      "#537bc4",
-      "#acc236",
-      "#166a8f",
-      "#00a950",
-      "#58595b",
-      "#8549ba",
-      "#e8c3b9",
-      "#c45850",
-      "#3cba9f",
-      "#ffcd56",
-      "#33b679",
-      "#ff6d00",
-      "#8e5ea2",
-      "#ff6384",
-      "#36a2eb",
-      "#cc65fe",
-      "#ffce56",
-    ];
+    renderBarChart(
+      "chart-top5",
+      data.top5.map((s) => s.name),
+      data.top5.map((s) => s.count),
+      "Top 5 Students"
+    );
+    renderBarChart(
+      "chart-inactive",
+      data.inactiveUsers.map((s) => s.name),
+      data.inactiveUsers.map((s) => s.count),
+      "Inactive Users",
+      "y"
+    );
+    // Frequent Questions Chart
+    renderFrequentQuestionsChart(
+      "chart-frequent-questions",
+      data.frequentQuestions
+    );
 
-    let colorIndex = 0;
-    const datasets = allTopSubs.map((sub) => ({
-      label: sub,
-      data: topTopics.map((topic) =>
-        topicToTopSubs[topic].includes(sub)
-          ? breakdownData[topic]?.[sub] || 0
-          : 0
-      ),
-      backgroundColor: chartColors[colorIndex++ % chartColors.length],
-      stack: "stack-1",
-    }));
+    // Topic Breakdown Chart (Stacked)
+    renderTopicBreakdownChart("chart-breakdown", data.topicSubtopicBreakdown);
 
-    // Step 6: Add "Other" dataset per topic (in gray)
-    datasets.push({
-      label: "Other",
-      data: topTopics.map((topic) => topicToOtherCount[topic] || 0),
-      backgroundColor: "#cccccc",
-      stack: "stack-1",
-    });
+    // Questions Over Time Line Chart
+    renderLineChart(
+      "chart-questions-time",
+      data.questionsOverTime.map((d) => d.date),
+      data.questionsOverTime.map((d) => d.count)
+    );
 
-    // Step 7: Render chart
-    const ctxBreak = document
-      .getElementById("chart-breakdown")
-      .getContext("2d");
-    activeCharts["chart-breakdown"] = new Chart(ctxBreak, {
-      type: "bar",
-      data: {
-        labels: topTopics,
-        datasets: datasets,
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: "bottom",
-            labels: {
-              boxWidth: 14,
-              padding: 8,
-            },
-          },
-          tooltip: {
-            mode: "index",
-            intersect: false,
-          },
-        },
-        scales: {
-          x: { stacked: true },
-          y: { stacked: true },
-        },
-      },
-    });
-
-    // ✅ Recommendations
+    // Recommendations
     const recBox = document.getElementById("recommendations-box");
-    const recCard = document.getElementById("card-recommendations");
-    if (result.recommendations) {
-      recBox.textContent = result.recommendations;
-      recCard.classList.remove("d-none");
-    } else {
-      recCard.classList.add("d-none");
-    }
+    recBox.textContent = data.recommendations || "No recommendations";
+    document
+      .getElementById("card-recommendations")
+      .classList.toggle("d-none", !data.recommendations);
   } catch (err) {
-    console.error("Failed to load lecturer stats:", err);
-    alert("Error loading stats. See console.");
+    console.error(err);
+    showError("Unable to load lecturer stats. Check console for details.");
+  } finally {
+    toggleLoader(false);
   }
 }
 
-window.addEventListener("load", () => {
+// Initialize page on load
+document.addEventListener("DOMContentLoaded", () => {
   fetchStudents();
 
-  // 📅 Set default date range: from 01/04/2025 to today
-  const today = new Date();
-  const endDate = today.toISOString().split("T")[0];
-  const startDate = "2025-04-01";
+  // Set default date range
+  const today = new Date().toISOString().split("T")[0];
+  document.getElementById("start-date").value = "2025-04-01";
+  document.getElementById("end-date").value = today;
 
-  document.getElementById("start-date").value = startDate;
-  document.getElementById("end-date").value = endDate;
-
-  // 🔄 Load initial stats automatically
   loadLecturerStats();
 
-  // 🧠 Allow refresh via button
   document
     .getElementById("load-stats")
-    ?.addEventListener("click", loadLecturerStats);
+    .addEventListener("click", loadLecturerStats);
 });

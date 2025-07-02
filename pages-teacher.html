@@ -57,10 +57,10 @@
         <ul class="d-flex align-items-center">
           <li class="nav-item dropdown pe-3">
             <a
-              class="nav-link nav-profile d-flex align-items-center pe-0 show"
+              class="nav-link nav-profile d-flex align-items-center pe-0"
               href="#"
               data-bs-toggle="dropdown"
-              aria-expanded="true"
+              aria-expanded="false"
             >
               <img
                 src="assets/img/profile-img.jpg"
@@ -71,7 +71,7 @@
             ><!-- End Profile Iamge Icon -->
 
             <ul
-              class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile show"
+              class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile"
               style="
                 position: absolute;
                 inset: 0px 0px auto auto;
@@ -183,6 +183,11 @@
           </ol>
         </nav>
       </div>
+      <div
+        id="error-box"
+        class="alert alert-danger"
+        style="display: none"
+      ></div>
 
       <!-- Nav Tabs -->
       <ul class="nav nav-tabs mb-4" id="teacherTabs" role="tablist">
@@ -333,6 +338,10 @@
                 </div>
               </div>
             </div>
+            <div id="loader" class="loader" hidden>
+              <div class="loader-spinner"></div>
+              <div class="loader-text">Loading statistics...</div>
+            </div>
 
             <!-- 📊 Charts & Insights -->
             <div class="row">
@@ -370,21 +379,31 @@
                 </div>
               </div>
 
-              <!-- Topic Breakdown -->
-              <div class="col-lg-6 mb-4">
-                <div class="card">
+              <!-- Topic Breakdown (Left) -->
+              <div class="col-lg-6 mb-4 d-flex align-items-stretch">
+                <div class="card w-100">
                   <div class="card-body">
                     <h5 class="card-title">Topic Breakdown (Stacked)</h5>
                     <div class="chart-container-scrollable">
                       <canvas id="chart-breakdown"></canvas>
+                      <div style="text-align: right">
+                        <button
+                          id="legendBtn"
+                          class="btn btn-sm btn-outline-secondary"
+                          style="margin-bottom: 4px"
+                        >
+                          Show Full Legend
+                        </button>
+                      </div>
+                      <div id="legendPopup"></div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Frequent Questions -->
-              <div class="col-lg-6 mb-4">
-                <div class="card">
+              <!-- Frequent Questions (Right) -->
+              <div class="col-lg-6 mb-4 d-flex align-items-stretch">
+                <div class="card w-100">
                   <div class="card-body">
                     <h5 class="card-title">Frequent Questions</h5>
                     <canvas id="chart-frequent-questions" height="200"></canvas>
@@ -410,6 +429,32 @@
                       Inactive Users (&lt; 5 Questions)
                     </h5>
                     <canvas id="chart-inactive" height="200"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <!-- Questions Over Time -->
+                <div class="col-lg-6 mb-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h5 class="card-title">Questions Over Time</h5>
+                      <canvas id="chart-questions-time" height="200"></canvas>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Questions Over Time by Student -->
+                <div class="col-lg-6 mb-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h5 class="card-title">Questions Over Time by Student</h5>
+                      <select
+                        id="studentSelect"
+                        class="form-control mb-3"
+                      ></select>
+                      <canvas id="studentChart" height="200"></canvas>
+                    </div>
                   </div>
                 </div>
               </div>
