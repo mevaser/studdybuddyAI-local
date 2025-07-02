@@ -1,6 +1,43 @@
 // js/auth.js
 import * as profile from "./profile.js";
 
+// Update the user dropdown label based on sessionStorage
+export function updateUserDropdownLabel() {
+  const labelEl = document.querySelector(".nav-profile .dropdown-toggle");
+  const name = sessionStorage.getItem("userName");
+  if (!labelEl) return;
+
+  if (name && name !== "Unknown User") {
+    labelEl.textContent = name;
+  } else {
+    labelEl.textContent = "Profile";
+  }
+}
+
+// Update the user dropdown label on page load
+export function updateUserDropdownLabel() {
+  const labelEl = document.getElementById("user-dropdown-label");
+  const idToken = sessionStorage.getItem("idToken_defaultUser");
+
+  if (!labelEl) {
+    console.warn("⚠️ user-dropdown-label element not found");
+    return;
+  }
+
+  if (idToken && isTokenValid(idToken)) {
+    const decoded = parseJwt(idToken);
+    const name =
+      decoded?.name ||
+      decoded?.["custom:name"] ||
+      decoded?.["cognito:username"] ||
+      "User";
+
+    labelEl.textContent = name;
+  } else {
+    labelEl.textContent = "Profile";
+  }
+}
+
 //
 // 1) Utility to parse the ?code from the query string
 //
@@ -225,6 +262,8 @@ export function updateAuthButton() {
       signOutButton.style.display = "none";
     }
   }
+  // 🆕 Always update user dropdown label
+  updateUserDropdownLabel();
 }
 
 export function ensureSignOutButtonExists() {

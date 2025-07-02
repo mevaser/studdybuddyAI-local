@@ -47,9 +47,9 @@ async function loadJsPDF() {
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("🌍 DOM fully loaded. Initializing...");
 
-  // Update authentication buttons
+  // Update authentication buttons and user dropdown label
   auth.updateAuthButton();
-
+  auth.updateUserDropdownLabel();
   // Attach event listener for the profile dropdown to ensure sign-out button is updated
   const profileDropdown = document.querySelector(".nav-profile");
   if (profileDropdown) {
@@ -98,6 +98,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       await profile.loadProfileFromDynamo(userEmail.toLowerCase());
       console.log("✅ Profile loaded successfully.");
       profile.updateUserNameOnPage();
+      auth.updateUserDropdownLabel();
     } catch (error) {
       console.error("❌ Error loading profile:", error);
     }
@@ -164,6 +165,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           alert("✅ Profile updated successfully!");
           await profile.loadProfileFromDynamo(userEmail);
           profile.updateUserNameOnPage();
+          auth.updateUserDropdownLabel();
         } else {
           alert(
             `❌ Failed to update profile: ${result.error || "Unknown error"}`
