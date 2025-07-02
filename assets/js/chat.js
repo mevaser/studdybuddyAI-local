@@ -76,6 +76,7 @@ export function initChat() {
     return;
   }
 
+
   // ✅ Enhanced message renderer with markdown support for GPT (api) responses
   function addMessage(content, sender = "user") {
     const message = document.createElement("div");
@@ -93,6 +94,7 @@ export function initChat() {
         : escapeHTML(content).replace(/\n/g, "<br>");
 
     message.innerHTML = rendered;
+
     chatWindow.appendChild(message);
     chatWindow.scrollTop = chatWindow.scrollHeight;
   }
