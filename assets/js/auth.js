@@ -3,19 +3,6 @@ import * as profile from "./profile.js";
 
 // Update the user dropdown label based on sessionStorage
 export function updateUserDropdownLabel() {
-  const labelEl = document.querySelector(".nav-profile .dropdown-toggle");
-  const name = sessionStorage.getItem("userName");
-  if (!labelEl) return;
-
-  if (name && name !== "Unknown User") {
-    labelEl.textContent = name;
-  } else {
-    labelEl.textContent = "Profile";
-  }
-}
-
-// Update the user dropdown label on page load
-export function updateUserDropdownLabel() {
   const labelEl = document.getElementById("user-dropdown-label");
   const idToken = sessionStorage.getItem("idToken_defaultUser");
 
