@@ -44,7 +44,7 @@
       <div class="d-flex align-items-center justify-content-between">
         <a href="index.html" class="logo d-flex align-items-center">
           <img
-            src="https://studybuddy-website.s3.us-east-1.amazonaws.com/studybuddy/assets/img/logo.png"
+            src="https://studybudybucket.s3.us-east-1.amazonaws.com/studdybuddyAI-local/assets/img/logo.png"
             alt="Logo"
           />
           <span class="d-none d-lg-block">StudyBuddy</span>
@@ -57,21 +57,22 @@
         <ul class="d-flex align-items-center">
           <li class="nav-item dropdown pe-3">
             <a
-              class="nav-link nav-profile d-flex align-items-center pe-0 show"
+              class="nav-link nav-profile d-flex align-items-center pe-0"
               href="#"
               data-bs-toggle="dropdown"
-              aria-expanded="true"
+              aria-expanded="false"
             >
-              <img
-                src="assets/img/profile-img.jpg"
-                alt="Profile"
-                class="rounded-circle"
-              />
-              <span class="d-none d-md-block dropdown-toggle ps-2"></span> </a
-            ><!-- End Profile Iamge Icon -->
+              <span
+                id="user-dropdown-label"
+                class="d-none d-md-block dropdown-toggle ps-2"
+              >
+                Profile
+              </span>
+            </a>
+            <!-- End Profile Image Icon -->
 
             <ul
-              class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile show"
+              class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile"
               style="
                 position: absolute;
                 inset: 0px 0px auto auto;
@@ -162,11 +163,7 @@
         <!-- End Teacher Page Nav -->
 
         <li class="nav-item">
-          <a
-            id="authButton"
-            class="nav-link collapsed"
-            href="https://us-east-1yfkzkrdrk.auth.us-east-1.amazoncognito.com/login?client_id=6q9dfaem3aaobkec9fs0p2n07e&redirect_uri=https://studybuddy-website.s3.us-east-1.amazonaws.com/studybuddy/index.html&response_type=token"
-          >
+          <a id="authButton" class="nav-link collapsed" href="#">
             <i class="bi bi-box-arrow-right"></i>
             <span>Login</span>
           </a>
@@ -187,122 +184,293 @@
           </ol>
         </nav>
       </div>
-      <!-- End Page Title -->
+      <div
+        id="error-box"
+        class="alert alert-danger"
+        style="display: none"
+      ></div>
 
-      <section class="section dashboard">
-        <div class="row">
-          <!-- Students Count Card -->
-          <div class="col-lg-4 col-md-6">
-            <div class="card info-card">
-              <div class="card-body">
-                <h5 class="card-title">Students <span>| Total</span></h5>
-                <div class="d-flex align-items-center">
-                  <div
-                    class="card-icon rounded-circle d-flex align-items-center justify-content-center"
-                  >
-                    <i class="bi bi-people"></i>
+      <!-- Nav Tabs -->
+      <ul class="nav nav-tabs mb-4" id="teacherTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link active"
+            id="students-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#students-pane"
+            type="button"
+            role="tab"
+          >
+            Students
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="stats-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#stats-pane"
+            type="button"
+            role="tab"
+          >
+            Stats
+          </button>
+        </li>
+      </ul>
+
+      <!-- Tab Panes -->
+      <div class="tab-content" id="teacherTabsContent">
+        <!-- Students Pane -->
+        <div
+          class="tab-pane fade show active"
+          id="students-pane"
+          role="tabpanel"
+        >
+          <section class="section dashboard">
+            <div class="row">
+              <!-- Students Count Card -->
+              <div class="col-lg-4 col-md-6">
+                <div class="card info-card">
+                  <div class="card-body">
+                    <h5 class="card-title">Students <span>| Total</span></h5>
+                    <div class="d-flex align-items-center">
+                      <div
+                        class="card-icon rounded-circle d-flex align-items-center justify-content-center"
+                      >
+                        <i class="bi bi-people"></i>
+                      </div>
+                      <div class="ps-3">
+                        <h6 id="total-students"></h6>
+                        <span class="text-success small pt-1 fw-bold">+0%</span>
+                        <span class="text-muted small pt-2 ps-1">increase</span>
+                      </div>
+                    </div>
                   </div>
-                  <div class="ps-3">
-                    <h6 id="total-students"></h6>
-                    <span class="text-success small pt-1 fw-bold">+0%</span>
-                    <span class="text-muted small pt-2 ps-1">increase</span>
+                </div>
+              </div>
+
+              <!-- Students List Table -->
+              <div class="col-12">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Students List</h5>
+                    <div class="table-responsive">
+                      <table
+                        class="table table-striped datatable"
+                        id="students-table"
+                      >
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Bio</th>
+                            <th>LinkedIn</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <!-- JavaScript will populate rows -->
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          <!-- End Students Count Card -->
+          </section>
+        </div>
 
-          <!-- Students List Table -->
-          <div class="col-12">
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Students List</h5>
-                <button class="btn btn-primary mb-3" onclick="addStudent()">
-                  Add Student
+        <!-- Stats Pane -->
+        <div class="tab-pane fade" id="stats-pane" role="tabpanel">
+          <section class="section dashboard">
+            <!-- 📅 Date Range Selector -->
+            <div class="row mb-3">
+              <div class="col-md-3">
+                <label for="start-date" class="form-label">Start Date</label>
+                <input type="date" id="start-date" class="form-control" />
+              </div>
+              <div class="col-md-3">
+                <label for="end-date" class="form-label">End Date</label>
+                <input type="date" id="end-date" class="form-control" />
+              </div>
+              <div class="col-md-3 d-flex align-items-end">
+                <button id="load-stats" class="btn btn-primary w-100">
+                  Load Stats
                 </button>
-                <table class="table table-striped" id="students-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Phone</th>
-                      <th>Bio</th>
-                      <th>LinkedIn</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <!-- Mock data rows will be added via JavaScript -->
-                  </tbody>
-                </table>
               </div>
             </div>
-          </div>
-          <!-- End Students List Table -->
+
+            <!-- ✅ Optional Filters -->
+            <div class="row mb-4">
+              <div class="col-md-3">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="includeTop5"
+                    checked
+                  />
+                  <label class="form-check-label" for="includeTop5">
+                    Include Top 5
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="includeInactive"
+                    checked
+                  />
+                  <label class="form-check-label" for="includeInactive">
+                    Include Inactive Users
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="includeRecommendations"
+                    checked
+                  />
+                  <label class="form-check-label" for="includeRecommendations">
+                    Include Recommendations for Lecturer
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div id="loader" class="loader" hidden>
+              <div class="loader-spinner"></div>
+              <div class="loader-text">Loading statistics...</div>
+            </div>
+
+            <!-- 📊 Charts & Insights -->
+            <div class="row">
+              <!-- Lecturer Recommendations -->
+              <div class="col-12 mb-4 d-none" id="card-recommendations">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Recommendations for Lecturer</h5>
+                    <pre
+                      id="recommendations-box"
+                      class="mt-2"
+                      style="white-space: pre-wrap"
+                    ></pre>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Networking Topics -->
+              <div class="col-lg-6 mb-4">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Top Topics - Networking</h5>
+                    <canvas id="chart-topics-networking" height="200"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- C# Topics -->
+              <div class="col-lg-6 mb-4">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Top Topics - C#</h5>
+                    <canvas id="chart-topics-csharp" height="200"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Topic Breakdown (Left) -->
+              <div class="col-lg-6 mb-4 d-flex align-items-stretch">
+                <div class="card w-100">
+                  <div class="card-body">
+                    <h5 class="card-title">Topic Breakdown (Stacked)</h5>
+                    <div class="chart-container-scrollable">
+                      <canvas id="chart-breakdown"></canvas>
+                      <div style="text-align: right">
+                        <button
+                          id="legendBtn"
+                          class="btn btn-sm btn-outline-secondary"
+                          style="margin-bottom: 4px"
+                        >
+                          Show Full Legend
+                        </button>
+                      </div>
+                      <div id="legendPopup"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Frequent Questions (Right) -->
+              <div class="col-lg-6 mb-4 d-flex align-items-stretch">
+                <div class="card w-100">
+                  <div class="card-body">
+                    <h5 class="card-title">Frequent Questions</h5>
+                    <canvas id="chart-frequent-questions" height="200"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Top 5 Students -->
+              <div class="col-lg-6 mb-4 d-none" id="card-top5">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Top 5 Students</h5>
+                    <canvas id="chart-top5" height="200"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Inactive Users -->
+              <div class="col-lg-6 mb-4 d-none" id="card-inactive">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">
+                      Inactive Users (&lt; 5 Questions)
+                    </h5>
+                    <canvas id="chart-inactive" height="200"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <!-- Questions Over Time -->
+                <div class="col-lg-6 mb-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h5 class="card-title">Questions Over Time</h5>
+                      <canvas id="chart-questions-time" height="200"></canvas>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Questions Over Time by Student -->
+                <div class="col-lg-6 mb-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h5 class="card-title">Questions Over Time by Student</h5>
+                      <select
+                        id="studentSelect"
+                        class="form-control mb-3"
+                      ></select>
+                      <canvas id="studentChart" height="200"></canvas>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
-      </section>
+      </div>
     </main>
     <!-- End Main Content -->
 
     <!-- Vendor JS Files -->
-    <script src="https://studybuddy-website.s3.us-east-1.amazonaws.com/studybuddy/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Main JS File -->
-    <script>
-      async function fetchStudents() {
-        const apiUrl =
-          "https://18ygiad1a8.execute-api.us-east-1.amazonaws.com/dev/getAllStudents";
-
-        try {
-          const response = await fetch(apiUrl);
-          if (!response.ok) {
-            throw new Error(`API error: ${response.status}`);
-          }
-
-          const responseBody = await response.json();
-
-          let students = responseBody.body;
-          if (typeof students === "string") {
-            students = JSON.parse(students);
-          }
-
-          if (!Array.isArray(students)) {
-            throw new Error("API response is not an array");
-          }
-
-          const tableBody = document.querySelector("#students-table tbody");
-          tableBody.innerHTML = "";
-
-          students.forEach((student, index) => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${student.Name || "N/A"}</td>
-            <td>${student.Email || "N/A"}</td>
-            <td>${student.phone || "N/A"}</td>
-            <td>${student.Bio || "N/A"}</td>
-            <td><a href="${
-              student["linkedin profile"] || "#"
-            }" target="_blank">LinkedIn</a></td>
-            
-          `;
-            tableBody.appendChild(row);
-          });
-
-          document.getElementById("total-students").innerText = students.length;
-        } catch (error) {
-          console.error("Error fetching students:", error);
-        }
-      }
-
-      document.addEventListener("DOMContentLoaded", fetchStudents);
-
-      function viewStudentDetails(email) {
-        alert(`Details for student with email: ${email}`);
-      }
-    </script>
+    <script src="https://studybudybucket.s3.us-east-1.amazonaws.com/studdybuddyAI-local/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/vendor/chart.js/chart.umd.js"></script>
+    <script src="assets/vendor/simple-datatables/simple-datatables.js"></script>
+    <script type="module" src="assets/js/pages-teacher.js"></script>
     <script type="module" src="assets/js/main.js"></script>
   </body>
 </html>

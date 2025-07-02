@@ -225,37 +225,37 @@ h6 {
 }
 /* Chat container */
 .chat-container {
-    display: flex;
-    flex-direction: column;
-    height: 400px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 400px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
 /* Chat window (message area) */
 .chat-window {
-    flex-grow: 1;
-    padding: 10px;
-    overflow-y: auto;
-    background-color: #f9f9f9;
+  flex-grow: 1;
+  padding: 10px;
+  overflow-y: auto;
+  background-color: #f9f9f9;
 }
 
 /* Chat input area */
 .chat-input-container {
-    display: flex;
-    gap: 10px;
-    padding: 10px;
-    background: #fff;
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  background: #fff;
 }
 
 #chat-input {
-    flex-grow: 1;
-    resize: none;
+  flex-grow: 1;
+  resize: none;
 }
 
 button {
-    padding: 10px 15px;
+  padding: 10px 15px;
 }
 
 .card-header,
@@ -495,7 +495,7 @@ button {
   list-style: none;
 }
 
-.header-nav>ul {
+.header-nav > ul {
   margin: 0;
   padding: 0;
 }
@@ -664,7 +664,6 @@ button {
 }
 
 @media (min-width: 1200px) {
-
   #main,
   #footer {
     margin-left: 300px;
@@ -678,7 +677,6 @@ button {
 }
 
 @media (min-width: 1200px) {
-
   .toggle-sidebar #main,
   .toggle-sidebar #footer {
     margin-left: 0;
@@ -794,6 +792,17 @@ button {
 /*--------------------------------------------------------------
 # Dashboard
 --------------------------------------------------------------*/
+/* Add scroll behavior to long tables with a height relative to screen */
+.table-scrollable {
+  height: 50vh; /* 50% of viewport height */
+  overflow-y: auto; /* Enables vertical scroll inside this container */
+}
+
+/* Prevent bottom spacing inside cards */
+.table-scrollable table {
+  margin-bottom: 0;
+}
+
 /* Filter dropdown */
 .dashboard .filter {
   position: absolute;
@@ -917,7 +926,7 @@ button {
 }
 
 /* News & Updates */
-.dashboard .news .post-item+.post-item {
+.dashboard .news .post-item + .post-item {
   margin-top: 15px;
 }
 
@@ -1186,7 +1195,7 @@ button {
   padding: 12px 15px;
 }
 
-.contact .php-email-form button[type=submit] {
+.contact .php-email-form button[type="submit"] {
   background: #4154f1;
   border: 0;
   padding: 10px 30px;
@@ -1195,7 +1204,7 @@ button {
   border-radius: 4px;
 }
 
-.contact .php-email-form button[type=submit]:hover {
+.contact .php-email-form button[type="submit"]:hover {
   background: #5969f3;
 }
 
@@ -1267,21 +1276,111 @@ button {
 --------------------------------------------------------------*/
 
 .message {
-    padding: 10px;
-    margin: 5px 10px;
-    border-radius: 5px;
-    max-width: 60%;
-    word-wrap: break-word;
+  padding: 10px;
+  margin: 5px 10px;
+  border-radius: 5px;
+  max-width: 60%;
+  word-wrap: break-word;
 }
 
-    .message.user {
-        background-color: #e6f7e6; /* Faint green background */
-        text-align: left;
-        margin-left: auto; /* Align user messages to the right */
-    }
+.message.user {
+  background-color: #e6f7e6; /* Faint green background */
+  text-align: left;
+  margin-left: auto; /* Align user messages to the right */
+}
 
-    .message.api {
-        background-color: #e6f0ff; /* Faint blue background */
-        text-align: left;
-        margin-right: auto; /* Align GPT messages to the left */
-    }
+.message.api {
+  background-color: #e6f0ff; /* Faint blue background */
+  text-align: left;
+  margin-right: auto; /* Align GPT messages to the left */
+}
+
+.chart-container-scrollable {
+  width: 100%;
+  overflow-x: hidden; /* ❌ disables horizontal scroll */
+  overflow-y: hidden;
+  max-height: 600px;
+  padding-bottom: 16px;
+  position: relative;
+}
+
+.chart-container-scrollable canvas {
+  width: 100% !important; /* ✅ make canvas responsive */
+  height: 550px !important; /* fixed height */
+  max-height: 600px;
+  min-width: unset !important; /* ❌ disable any forced minimum */
+}
+
+/*--------------------------------------------------------------
+# Legend Popup
+--------------------------------------------------------------*/
+#legendPopup {
+  display: none;
+  position: fixed;
+  top: 38px; /* גובה מהכפתור */
+  right: 0;
+  z-index: 99999;
+  background: #fff;
+  border: 1px solid #ddd;
+  max-width: 420px;
+  max-height: 250px;
+  overflow: auto;
+  padding: 10px;
+  box-shadow: 0 2px 8px #bbb;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 13px;
+}
+#legendPopup b {
+  font-size: 14px;
+}
+#legendPopup .legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  margin-right: 7px;
+  display: inline-block;
+  vertical-align: middle;
+}
+#legendPopup .legend-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 3px;
+}
+
+/* Loader overlay for stats panel */
+#loader.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 32px 0 18px 0;
+  min-height: 90px;
+  background: transparent;
+}
+
+#loader .loader-spinner {
+  border: 6px solid #eaeaea;
+  border-top: 6px solid #347cff;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  animation: spin 1.2s linear infinite;
+  margin-bottom: 8px;
+}
+
+#loader .loader-text {
+  font-size: 1.12rem;
+  color: #444;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

@@ -82,6 +82,11 @@ export function initChat() {
     const message = document.createElement("div");
     message.className = `message ${sender}`;
 
+    // Check if the message is in Hebrew
+    const isHebrew = /[\u0590-\u05FF]/.test(content);
+    message.style.direction = isHebrew ? "rtl" : "ltr";
+    message.style.textAlign = isHebrew ? "right" : "left";
+
     // GPT replies in markdown format → render using marked.js
     const rendered =
       sender === "api"

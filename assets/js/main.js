@@ -11,9 +11,7 @@ async function waitForToken(retries = 5, delay = 300) {
     if (idToken && auth.isTokenValid(idToken)) {
       return idToken;
     }
-    console.log(
-      `🔄 Waiting for ID token... Attempt ${i + 1}/${retries}`
-    );
+    console.log(`🔄 Waiting for ID token... Attempt ${i + 1}/${retries}`);
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
 
@@ -29,7 +27,8 @@ async function loadJsPDF() {
 
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    script.src =
+      "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
     script.onload = () => {
       // jsPDF נטען כ-window.jspdf.jsPDF
       if (window.jspdf && window.jspdf.jsPDF) {
@@ -44,14 +43,13 @@ async function loadJsPDF() {
   });
 }
 
-
 // Run when DOM is fully loaded
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("🌍 DOM fully loaded. Initializing...");
 
-  // Update authentication buttons
+  // Update authentication buttons and user dropdown label
   auth.updateAuthButton();
-
+  auth.updateUserDropdownLabel();
 
   // Attach event listener for the profile dropdown to ensure sign-out button is updated
   const profileDropdown = document.querySelector(".nav-profile");
@@ -98,12 +96,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (userEmail) {
     console.log("🔍 Fetching profile from DynamoDB...");
     try {
-      await profile.loadProfileFromDynamo(
-        userEmail.toLowerCase()
-      );
+
+      await profile.loadProfileFromDynamo(userEmail.toLowerCase());
 
       console.log("✅ Profile loaded successfully.");
       profile.updateUserNameOnPage();
+      auth.updateUserDropdownLabel();
     } catch (error) {
       console.error("❌ Error loading profile:", error);
     }
@@ -111,9 +109,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Attach event listener to chat link for profile verification before access
 
-  const chatLink = document.querySelector(
-    'a[href="pages-chat.html"]'
-  );
+  const chatLink = document.querySelector('a[href="pages-chat.html"]');
 
   if (chatLink) {
     chatLink.addEventListener("click", (event) => {
@@ -131,29 +127,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   profile.populateProfileEditForm();
 
   // Profile update event listener
-  const saveChangesBtn = document.getElementById(
-    "saveChangesBtn"
-  );
+  const saveChangesBtn = document.getElementById("saveChangesBtn");
 
   if (saveChangesBtn) {
     saveChangesBtn.addEventListener("click", async (event) => {
       event.preventDefault();
       console.log("🗒️ Save Changes button clicked");
-      const updatedName =
-        document.getElementById("fullName")?.value.trim();
-      const updatedAbout =
-        document.getElementById("about")?.value.trim();
-      const updatedPhone =
-        document.getElementById("phone")?.value.trim();
-      const updatedLinkedin =
-        document.getElementById("Linkedin")?.value.trim();
-      const idToken = sessionStorage.getItem(
-        "idToken_defaultUser"
-      );
+      const updatedName = document.getElementById("fullName")?.value.trim();
+      const updatedAbout = document.getElementById("about")?.value.trim();
+      const updatedPhone = document.getElementById("phone")?.value.trim();
+      const updatedLinkedin = document.getElementById("Linkedin")?.value.trim();
+      const idToken = sessionStorage.getItem("idToken_defaultUser");
       if (!idToken || !auth.isTokenValid(idToken)) {
-        alert(
-          "⚠ User is not authenticated or token is invalid/expired."
-        );
+        alert("⚠ User is not authenticated or token is invalid/expired.");
         return;
       }
       const decodedToken = auth.parseJwt(idToken);
@@ -189,6 +175,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           await profile.loadProfileFromDynamo(userEmail); // reload & update everything
 
           profile.updateUserNameOnPage();
+          auth.updateUserDropdownLabel();
         } else {
           alert(
             `❌ Failed to update profile: ${result.error || "Unknown error"}`
