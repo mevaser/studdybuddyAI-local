@@ -524,9 +524,16 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("start-date").value = "2025-04-01";
   document.getElementById("end-date").value = today;
 
-  loadLecturerStats();
-
+  // האזנה ללחיצה על כפתור Load Stats
   document
     .getElementById("load-stats")
     .addEventListener("click", loadLecturerStats);
+
+  // --- הוספה חדשה: הצג Loader בכל מעבר לטאב ה-Stats ---
+  document
+    .getElementById("stats-tab")
+    .addEventListener("shown.bs.tab", function () {
+      toggleLoader(true); // מציג loader מיד כשנכנסים לטאב
+      loadLecturerStats(); // טוען מחדש את הגרפים והנתונים
+    });
 });
