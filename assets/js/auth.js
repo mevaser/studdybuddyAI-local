@@ -124,7 +124,6 @@ export function saveTokens(userId, tokens) {
   if (tokens.id_token) {
     sessionStorage.setItem(`idToken_${userId}`, tokens.id_token);
 
-
     // Extract user info
     const decodedToken = parseJwt(tokens.id_token);
     if (decodedToken) {
@@ -151,16 +150,12 @@ export function saveTokens(userId, tokens) {
     // Save access token
     sessionStorage.setItem(`accessToken_${userId}`, tokens.access_token);
 
-
     // Parse groups from access token
     const groupsArray = getUserGroupsFromToken(tokens.access_token);
     console.log("▶️ Parsed groups from access_token:", groupsArray);
 
-
     // Save groups to sessionStorage
     sessionStorage.setItem("groups", groupsArray.join(","));
-    console.log("Saved access token");
-
   }
   if (tokens.refresh_token) {
     sessionStorage.setItem(`refreshToken_${userId}`, tokens.refresh_token);
@@ -191,7 +186,6 @@ export function clearTokens(userId) {
   sessionStorage.removeItem("userData");
   sessionStorage.clear(); // Full session reset
 }
-
 
 export function getUserGroupsFromToken(token) {
   if (!token) return [];

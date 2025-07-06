@@ -339,19 +339,17 @@ class ChartGenerator {
   }
 }
 
-// Enhanced PDF generation with improved layouts (with Hebrew font support)
+// Enhanced PDF generation with improved layouts
 async function loadJsPDF() {
   if (window.jsPDF) return window.jsPDF;
-
-  // 1) Load the jsPDF library
-  await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const script = document.createElement("script");
     script.src =
       "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
     script.onload = () => {
       if (window.jspdf && window.jspdf.jsPDF) {
         window.jsPDF = window.jspdf.jsPDF;
-        resolve();
+        resolve(window.jsPDF);
       } else {
         reject(new Error("jsPDF object not found"));
       }
@@ -359,26 +357,6 @@ async function loadJsPDF() {
     script.onerror = () => reject(new Error("Failed to load jsPDF"));
     document.head.appendChild(script);
   });
-
-  // 2) Embed Alef-Regular.ttf into jsPDF's VFS
-  //    (paste here the Base64 string from alef-regular.b64.txt)
-  window.jsPDF.API.addFileToVFS(
-    "Alef-Regular.ttf",
-    "<PASTE_BASE64_FROM_alef-bold.b64.txt>"
-  );
-  //    register it under the family name "Alef", style "normal"
-  window.jsPDF.API.addFont("Alef-Regular.ttf", "Alef", "normal");
-
-  // 3) Embed Alef-Bold.ttf into jsPDF's VFS
-  //    (paste here the Base64 string from alef-bold.b64.txt)
-  window.jsPDF.API.addFileToVFS(
-    "Alef-Bold.ttf",
-    "<PASTE_BASE64_FROM_alef-bold.b64.txt>"
-  );
-  //    register it under the family name "Alef", style "bold"
-  window.jsPDF.API.addFont("Alef-Bold.ttf", "Alef", "bold");
-
-  return window.jsPDF;
 }
 
 function checkPageOverflow(doc, currentY, threshold = 270) {
