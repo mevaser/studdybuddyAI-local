@@ -4,22 +4,37 @@ import * as profile from "./profile.js";
 // Update the user dropdown label based on sessionStorage
 export function updateUserDropdownLabel() {
   const labelEl = document.getElementById("user-dropdown-label");
-  const idToken = sessionStorage.getItem("idToken_defaultUser");
-
   if (!labelEl) {
     console.warn("⚠️ user-dropdown-label element not found");
     return;
   }
 
+  // First try: load from sessionStorage userData
+  const userData = JSON.parse(sessionStorage.getItem("userData") || "{}");
+  const nameFromProfile = userData?.Name;
+
+  if (nameFromProfile) {
+    labelEl.textContent = nameFromProfile;
+
+    // Also update other name placeholders
+    document.querySelectorAll(".user-name").forEach((el) => {
+      el.textContent = nameFromProfile;
+    });
+
+    return; // ✅ All good
+  }
+
+  // Fallback: parse name from token (less accurate)
+  const idToken = sessionStorage.getItem("idToken_defaultUser");
   if (idToken && isTokenValid(idToken)) {
     const decoded = parseJwt(idToken);
-    const name =
+    const fallbackName =
       decoded?.name ||
       decoded?.["custom:name"] ||
       decoded?.["cognito:username"] ||
       "User";
 
-    labelEl.textContent = name;
+    labelEl.textContent = fallbackName;
   } else {
     labelEl.textContent = "Profile";
   }
@@ -131,12 +146,11 @@ export function saveTokens(userId, tokens) {
         "userEmail",
         decodedToken.email?.toLowerCase() || "unknown"
       );
-      let userName =
-        decodedToken.name ||
-        decodedToken["custom:name"] ||
-        decodedToken["cognito:username"] ||
-        "Unknown User";
-      sessionStorage.setItem("userName", userName);
+      let userName = decodedToken.name || decodedToken["custom:name"] || ""; // 👈 do not fallback to cognito:username here
+      if (userName) {
+        sessionStorage.setItem("userName", userName);
+      }
+
       console.log(
         "✅ Saved user email and name:",
         decodedToken.email,
@@ -249,8 +263,6 @@ export function updateAuthButton() {
       signOutButton.style.display = "none";
     }
   }
-  // 🆕 Always update user dropdown label
-  updateUserDropdownLabel();
 }
 
 export function ensureSignOutButtonExists() {

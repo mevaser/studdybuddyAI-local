@@ -1,4 +1,6 @@
 // js/profile.js
+
+import { updateUserDropdownLabel } from "./auth.js";
 export async function loadProfileFromDynamo(userEmail) {
   try {
     console.log("Loading student profile for:", userEmail);
@@ -60,6 +62,9 @@ export async function loadProfileFromDynamo(userEmail) {
     if (dropdownNameEl && studentData.Name) {
       dropdownNameEl.textContent = studentData.Name;
     }
+
+    // Update dropdown label again after profile is loaded
+    updateUserDropdownLabel(); // 🔁 Re-render profile name after getting real data
 
     populateProfileEditForm();
   } catch (error) {

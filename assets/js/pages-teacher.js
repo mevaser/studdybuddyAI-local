@@ -517,6 +517,8 @@ async function loadLecturerStats() {
 
 // Initialize page on load
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("📘 pages-teacher.js loaded");
+
   fetchStudents();
 
   // Set default date range
@@ -536,4 +538,8 @@ document.addEventListener("DOMContentLoaded", () => {
       toggleLoader(true); // מציג loader מיד כשנכנסים לטאב
       loadLecturerStats(); // טוען מחדש את הגרפים והנתונים
     });
+  console.log(
+    "🧠 userData from sessionStorage",
+    sessionStorage.getItem("userData")
+  );
 });
